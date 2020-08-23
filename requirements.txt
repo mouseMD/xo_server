@@ -1,11 +1,17 @@
 aiohttp==3.6.2
 aiohttp-jinja2==1.2.0
+aiohttp-security==0.4.0
+aiohttp-session==2.9.0
 async-timeout==3.0.1
 attrs==20.1.0
+cffi==1.14.2
 chardet==3.0.4
+cryptography==3.0
 idna==2.10
 Jinja2==2.11.2
 MarkupSafe==1.1.1
 multidict==4.7.6
+pycparser==2.20
+six==1.15.0
 typing-extensions==3.7.4.2
 yarl==1.5.1
