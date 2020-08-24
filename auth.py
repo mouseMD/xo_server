@@ -8,3 +8,11 @@ class MyAuthorizationPolicy(AbstractAuthorizationPolicy):
     async def permits(self, identity, permission, context=None):
         return True
 
+
+_global_user_counter = 0
+
+
+def get_new_anonymous_user_id():
+    global _global_user_counter
+    _global_user_counter += 1
+    return _global_user_counter

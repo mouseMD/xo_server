@@ -1,6 +1,8 @@
 from aiohttp import web, WSMsgType
 import aiohttp_jinja2
 from aiohttp_security import is_anonymous, remember, forget, authorized_userid
+from auth import get_new_anonymous_user_id
+import players
 
 
 @aiohttp_jinja2.template('index.html')
@@ -10,7 +12,7 @@ async def index(request):
         user_id = await authorized_userid(request)
         return {'variable': user_id}
     else:
-        user_id = "Unathorized user"
+        user_id = "User#" + str(get_new_anonymous_user_id())
         redirect_response = web.HTTPFound('/')
         await remember(request, redirect_response, user_id)
         raise redirect_response
@@ -20,15 +22,35 @@ async def websocket_handler(request):
     ws = web.WebSocketResponse()
     await ws.prepare(request)
     user_id = await authorized_userid(request)
-    async for msg in ws:
-        if msg.type == WSMsgType.TEXT:
-            if msg.data == 'close':
-                await ws.close()
-            else:
-                await ws.send_str(msg.data + user_id)
-        elif msg.type == WSMsgType.ERROR:
-            print('ws connection closed with exception %s' % ws.exception())
+    # if already connected, not permit connection
+    if user_id in players.players_list:
+        await ws.close()
+    else:
+        players.players_list.append(user_id)
+        async for msg in ws:
+            if msg.type == WSMsgType.TEXT:
+                if msg.data == 'close':
+                    await ws.close()
+                    players.players_list.remove(user_id)
+                else:
+                    await ws.send_str(msg.data + user_id)
+            elif msg.type == WSMsgType.ERROR:
+                print('ws connection closed with exception %s' % ws.exception())
+                players.players_list.remove(user_id)
 
-    print('websocket connection closed')
+        print('websocket connection closed')
 
     return ws
+
+
+@aiohttp_jinja2.template('wait_game.html')
+async def wait_game(request):
+    is_logged = not await is_anonymous(request)
+    if is_logged:
+        user_id = await authorized_userid(request)
+        return {'user': user_id}
+    else:
+        user_id = "User#" + str(get_new_anonymous_user_id())
+        redirect_response = web.HTTPFound('/wait_game')
+        await remember(request, redirect_response, user_id)
+        raise redirect_response
