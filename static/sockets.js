@@ -29,7 +29,7 @@ function send_move() {
 
 function send_resign() {
     let resign_message = {
-    version: "v1"
+    version: "v1",
     command: "resign"
     };
     let payload = JSON.stringify(resign_message);
@@ -38,7 +38,7 @@ function send_resign() {
 
 function send_offer() {
     let offer_message = {
-    version: "v1"
+    version: "v1",
     command: "offer"
     };
     let payload = JSON.stringify(offer_message);
@@ -98,6 +98,7 @@ socket.onmessage = function(e)
           case 'game_over':
             handle_game_over(cmd_data.parameters);
             break;
+        }
     }
     else
     {
