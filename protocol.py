@@ -119,7 +119,7 @@ async def handle_command(cmd_data, user_id, ws):
         }
 
         if command in command_handlers:
-            command_handlers[command](parameters, user_id, ws)
+            await command_handlers[command](parameters, user_id, ws)
         else:
             print('unknown command {} found!'.format(command))
     else:
@@ -131,7 +131,9 @@ async def handle_error(user_id):
     player = active_players.pop(user_id)
     if player.game_id is not None:
         opp = active_players.pop(player.opponent_id)
-        responce = await construct_game_over()
+        responce = await construct_game_over(result="win",
+                                             win_pos=None,
+                                             cause="interruption")
         await opp.ws.send_json(responce)
         # save game to db
         await add_game_to_db()
@@ -149,7 +151,7 @@ async def construct_started(opp_id, ptype):
             "ptype": ptype
         }
     }
-    return json.dump(data)
+    return json.dumps(data)
 
 
 async def construct_update_state(board, p_t_m, last_move):
@@ -162,7 +164,7 @@ async def construct_update_state(board, p_t_m, last_move):
             "last_move": last_move
         }
     }
-    return json.dump(data)
+    return json.dumps(data)
 
 
 async def construct_offered():
@@ -172,7 +174,7 @@ async def construct_offered():
         "parameters": {
         }
     }
-    return json.dump(data)
+    return json.dumps(data)
 
 
 async def construct_game_over(result, win_pos, cause):
@@ -185,4 +187,4 @@ async def construct_game_over(result, win_pos, cause):
             "cause": cause
         }
     }
-    return json.dump(data)
+    return json.dumps(data)

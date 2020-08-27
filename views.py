@@ -4,6 +4,7 @@ from aiohttp_security import is_anonymous, remember, forget, authorized_userid
 from auth import get_new_anonymous_user_id
 import players
 from protocol import handle_command, handle_error
+import json
 
 
 @aiohttp_jinja2.template('index.html')
@@ -29,7 +30,7 @@ async def websocket_handler(request):
     else:
         async for msg in ws:
             if msg.type == WSMsgType.TEXT:
-                await handle_command(msg.data, user_id, ws)
+                await handle_command(json.loads(msg.data), user_id, ws)
             elif msg.type == WSMsgType.ERROR:
                 print('ws connection closed with exception %s' % ws.exception())
                 await handle_error(user_id)
