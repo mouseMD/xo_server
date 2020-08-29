@@ -44,7 +44,7 @@ async def resign_handler(params, user_id, ws):
         # save game to db
         await add_game_to_db()
         # remove game from app
-        xo_app_stub.release_game()
+        xo_app_stub.release_game(player.game_id)
         await opp.ws.close()
     await ws.close()
 
@@ -53,27 +53,29 @@ async def move_handler(params, user_id, ws):
     player = active_players[user_id]
     opponent = active_players[player.opponent_id]
     # update game
-    xo_app_stub.set_new_move()
-    board = xo_app_stub.get_board()
-    player_to_move = xo_app_stub.get_player_to_move()
+    game_id = player.game_id
+    xo_app_stub.set_new_move(game_id, player.ptype,
+                             [params['square'], params['vertical'], params['horizontal']])
+    board = xo_app_stub.get_board(game_id)
+    player_to_move = xo_app_stub.get_player_to_move(game_id)
     last_move = params
     responce1 = await construct_update_state(board, player_to_move, last_move)
     responce2 = await construct_update_state(board, player_to_move, last_move)
     await ws.send_json(responce1)
     await opponent.ws.send_json(responce2)
     # check for game over
-    if xo_app_stub.finished():
-        result = xo_app_stub.result()
-        win_pos = xo_app_stub.get_win_coords()
+    if xo_app_stub.finished(game_id):
+        result = xo_app_stub.result(game_id)
+        win_pos = xo_app_stub.get_win_coords(game_id)
         responce1 = await construct_game_over(result, win_pos, "win rule")
         responce2 = await construct_game_over(result, win_pos, "win rule")
         await ws.send_json(responce1)
         await opponent.ws.send_json(responce2)
         # save game to db
-        moves = xo_app_stub.get_moves()
+        moves = xo_app_stub.get_moves(game_id)
         await add_game_to_db()
         # remove game from app
-        xo_app_stub.release_game()
+        xo_app_stub.release_game(game_id)
         await opponent.ws.close()
         await ws.close()
 
@@ -96,7 +98,7 @@ async def offer_handler(params, user_id, ws):
         # save game to db
         await add_game_to_db()
         # remove game from app
-        xo_app_stub.release_game()
+        xo_app_stub.release_game(player.game_id)
         await opponent.ws.close()
         await ws.close()
     else:
