@@ -12,6 +12,11 @@
         <H1>User {{user}} is connected and waiting game.</H1>
     </div>
     <div id="content">
+        <input type="button" value="ready" onclick="send_ready()">
+        <input type="button" value="move" onclick="send_move()">
+        <input type="button" value="resign" onclick="send_resign()">
+        <input type="button" value="offer" onclick="send_offer()">
+        <textarea id="debug" rows="10" cols="80" name="text"></textarea>
 	</div>
     <div id="footer">
     </div>

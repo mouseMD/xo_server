@@ -2,7 +2,6 @@ from players import active_players, ActivePlayer, \
     get_suitable_opponent, add_to_waiting_list, offers
 import xo_app_stub
 from db import add_game_to_db
-import json
 
 
 async def ready_handler(params, user_id, ws):
@@ -84,8 +83,8 @@ async def offer_handler(params, user_id, ws):
     opponent = active_players[player.opponent_id]
 
     # if answer to offer
-    if opponent in offers:
-        offers.remove(opponent)
+    if player.opponent_id in offers:
+        offers.remove(player.opponent_id)
         responce1 = await construct_game_over(result="draw",
                                               win_pos=None,
                                               cause="agreement")
@@ -144,27 +143,27 @@ async def handle_error(user_id):
 
 async def construct_started(opp_id, ptype):
     data = {
-        "version": "v1",
+        'version': 'v1',
         "command": "started",
         "parameters": {
             "opponent": opp_id,
             "ptype": ptype
         }
     }
-    return json.dumps(data)
+    return data
 
 
 async def construct_update_state(board, p_t_m, last_move):
     data = {
         "version": "v1",
-        "command": "started",
+        "command": "update_state",
         "parameters": {
             "board": board,
             "player_to_move": p_t_m,
             "last_move": last_move
         }
     }
-    return json.dumps(data)
+    return data
 
 
 async def construct_offered():
@@ -174,7 +173,7 @@ async def construct_offered():
         "parameters": {
         }
     }
-    return json.dumps(data)
+    return data
 
 
 async def construct_game_over(result, win_pos, cause):
@@ -187,4 +186,4 @@ async def construct_game_over(result, win_pos, cause):
             "cause": cause
         }
     }
-    return json.dumps(data)
+    return data

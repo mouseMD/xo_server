@@ -10,6 +10,7 @@ function send_ready() {
         }
     };
     let payload = JSON.stringify(ready_message);
+    document.getElementById("debug").value += (payload + '\n') ;
     socket.send(payload);
 };
 
@@ -24,24 +25,29 @@ function send_move() {
         }
     };
     let payload = JSON.stringify(move_message);
+    document.getElementById("debug").value += (payload + '\n');
     socket.send(payload);
 };
 
 function send_resign() {
     let resign_message = {
     version: "v1",
-    command: "resign"
+    command: "resign",
+    parameters: {}
     };
     let payload = JSON.stringify(resign_message);
+    document.getElementById("debug").value += (payload + '\n');
     socket.send(payload);
 };
 
 function send_offer() {
     let offer_message = {
     version: "v1",
-    command: "offer"
+    command: "offer",
+    parameters: {}
     };
     let payload = JSON.stringify(offer_message);
+    document.getElementById("debug").value += (payload + '\n');
     socket.send(payload);
 };
 
@@ -49,7 +55,6 @@ function handle_started(cm_data)
 {
     let player_n = cm_data.player_n;
     let opponent_name = cm_data.opponent_name;
-    alert(`Game started as ${player_n} player. Opponent name is ${opponent_name}`);
 };
 
 function handle_update_state(cm_data)
@@ -57,31 +62,28 @@ function handle_update_state(cm_data)
     let board = cm_data.board;
     let player_to_move = cm_data.player_to_move;
     let last_move = cm_data.last_move;
-    alert(`Game started updated! Board now is ${board}, player to move is ${player_to_move}. Last move is ${last_move}`);
 };
 
 function handle_offered(cm_data)
 {
-    alert('You were offered a draw');
+
 };
 
 function handle_game_over(cm_data)
 {
     let result = cm_data.result;
     let win_pos = cm_data.win_pos;
-    alert(`The result is ${result}. Win pos is ${win_pos}`);
 }
 
 
 socket.onopen = function(e)
 {
     alert("[open] Connection established");
-    send_ready();
 };
 
 socket.onmessage = function(e)
 {
-    alert(`[message] Data received: ${e.data}`);
+    document.getElementById("debug").value += (e.data + '\n');
     let cmd_data = JSON.parse(e.data)
     if (cmd_data.version == "v1")
     {
@@ -102,7 +104,7 @@ socket.onmessage = function(e)
     }
     else
     {
-        alert("Wrong protocol version!");
+        alert(`Wrong protocol version ${cmd_data.version} !`);
     }
 };
 
