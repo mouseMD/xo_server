@@ -18,15 +18,15 @@ def release_game(game_index):
 
 
 def finalize():
-    pass
+    ga.finalize()
 
 
 def finished(game_index):
     return ga.finished(game_index)
 
 
-def started():
-    pass
+def started(game_index):
+    return ga.started(game_index)
 
 
 def result(game_index):
@@ -41,13 +41,14 @@ def get_win_coords(game_index):
     return ga.get_win_coords(game_index)
 
 
-def exist():
-    pass
+def exist(game_index):
+    return ga.exist(game_index)
 
 
 def get_board(game_index):
-    return [0]*64
+    return ga.get_board(game_index)
 
 
 def get_player_to_move(game_index):
-    return 1
+    p = ga.get_player_to_move(game_index)
+    return 'first' if p == xo_app.Player.X_Player else 'second'
