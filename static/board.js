@@ -3,11 +3,24 @@ ctx = example.getContext('2d');
 example.width  = 640;
 example.height = 480;
 
-let size = 25
+let size = 32
 let frame_margin_1 = 2
 let frame_margin_2 = 5
 let square_count_x = 4
 let square_count_y = 4
+
+let matrix = [
+  [1, 0, 2, 2],
+  [2, 0, 1, 1],
+  [0, 1, 2, 0],
+  [0, 0, 1, 0]
+];
+
+pic_X = new Image();
+pic_O = new Image();
+pic_X.src = 'static/X.png';
+pic_O.src = 'static/O.png'
+
 
 class BigSquare{
 constructor(start_x, start_y, size, frame_margin_1, frame_margin_2, square_count_x, square_count_y, color) {
@@ -32,7 +45,7 @@ constructor(start_x, start_y, size, frame_margin_1, frame_margin_2, square_count
     this.frame_2_size_y = this.board_size_y + 2 * this.frame_margin_2;
 }
 
-draw() {
+draw(ar) {
     ctx.strokeRect(this.frame_1_start_x, this.frame_1_start_y, this.frame_1_size_x, this.frame_1_size_y);
     ctx.strokeRect(this.frame_2_start_x, this.frame_2_start_y, this.frame_2_size_x, this.frame_2_size_y);
     ctx.fillStyle = this.color; // меняем цвет клеток
@@ -40,6 +53,12 @@ draw() {
     for (let i = 0; i < this.square_count_x; i += 1)
         for (let j = 0; j < this.square_count_y; j += 1) {
             ctx.fillRect(this.start_x + i * this.size, this.start_y + j * this.size, this.size-1, this.size-1);
+            if (ar[i][j] == 1) {
+                ctx.drawImage(pic_X, this.start_x + i * this.size, this.start_y + j * this.size);
+            }
+            else if (ar[i][j] == 2) {
+                 ctx.drawImage(pic_O, this.start_x + i * this.size, this.start_y + j * this.size);
+            }
         }
 }
 
@@ -57,23 +76,20 @@ getCoords(xPos, yPos) {
 
 }
 
+
 let square1 = new BigSquare(20, 20, size, frame_margin_1, frame_margin_2, square_count_x, square_count_y, '#AF5200');
 let square2 = new BigSquare(180, 20, size, frame_margin_1, frame_margin_2, square_count_x, square_count_y, '#AF5200');
 let square3 = new BigSquare(340, 20, size, frame_margin_1, frame_margin_2, square_count_x, square_count_y, '#AF5200');
 let square4 = new BigSquare(500, 20, size, frame_margin_1, frame_margin_2, square_count_x, square_count_y, '#AF5200');
 
-square1.draw();
-square2.draw();
-square3.draw();
-square4.draw();
 
-pic = new Image();              // "Создаём" изображение
-pic.src    = 'http://habrahabr.ru/i/nocopypast.png';  // Источник изображения, позаимствовано на хабре
-pic.onload = function() {    // Событие onLoad, ждём момента пока загрузится изображение
-   //ctx.drawImage(pic, 0, 0);  // Рисуем изображение от точки с координатами 0, 0
-   //ctx.drawImage(pic, 0, 0, 300, 150);
-   //ctx.drawImage(pic, 25, 42, 85, 55, 0, 0, 170, 110);
+pic_X.onload = function() {    // Событие onLoad, ждём момента пока загрузится изображение
+   square1.draw(matrix);
+square2.draw(matrix);
+square3.draw(matrix);
+square4.draw(matrix);
 }
+
 
 function windowToCanvas(canvas, x, y) {
     var bbox = canvas.getBoundingClientRect();
@@ -104,9 +120,4 @@ example.addEventListener('mousedown', function (e) {
     else {
         document.getElementById("debug").value += (" missed!");
     }
-
-
-
-
-
 });
