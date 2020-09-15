@@ -12,12 +12,18 @@
         <H1>User {{user}} is connected and waiting game.</H1>
     </div>
     <div id="content">
+        <div id="first_player">
+        </div>
+        <div id="second_player">
+        </div>
+        <canvas height='320' width='480' id='example'>Обновите браузер</canvas>
         <input type="button" value="ready" onclick="send_ready()">
         <input type="button" value="move" onclick="send_move()">
         <input type="button" value="resign" onclick="send_resign()">
         <input type="button" value="offer" onclick="send_offer()">
         <textarea id="debug" rows="10" cols="80" name="text"></textarea>
 	</div>
+    <script src="static/board.js"></script>
     <div id="footer">
     </div>
 </body>

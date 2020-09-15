@@ -9,7 +9,28 @@ let frame_margin_2 = 5
 let square_count_x = 4
 let square_count_y = 4
 
-let matrix = [
+let matrix1 = [
+  [1, 0, 2, 2],
+  [2, 0, 1, 1],
+  [0, 1, 2, 0],
+  [0, 0, 1, 0]
+];
+
+let matrix2 = [
+  [1, 0, 2, 2],
+  [2, 0, 1, 1],
+  [0, 1, 2, 0],
+  [0, 0, 1, 0]
+];
+
+let matrix3 = [
+  [1, 0, 2, 2],
+  [2, 0, 1, 1],
+  [0, 1, 2, 0],
+  [0, 0, 1, 0]
+];
+
+let matrix4 = [
   [1, 0, 2, 2],
   [2, 0, 1, 1],
   [0, 1, 2, 0],
@@ -21,6 +42,15 @@ pic_O = new Image();
 pic_X.src = 'static/X.png';
 pic_O.src = 'static/O.png'
 
+function get_matrix(index, board_data)
+{
+    return [
+  [1, 0, 2, 2],
+  [2, 0, 1, 1],
+  [0, 1, 2, 0],
+  [0, 0, 1, 0]
+];
+}
 
 class BigSquare{
 constructor(start_x, start_y, size, frame_margin_1, frame_margin_2, square_count_x, square_count_y, color) {
@@ -84,10 +114,10 @@ let square4 = new BigSquare(500, 20, size, frame_margin_1, frame_margin_2, squar
 
 
 pic_X.onload = function() {    // Событие onLoad, ждём момента пока загрузится изображение
-   square1.draw(matrix);
-square2.draw(matrix);
-square3.draw(matrix);
-square4.draw(matrix);
+    square1.draw(matrix1);
+    square2.draw(matrix2);
+    square3.draw(matrix3);
+    square4.draw(matrix4);
 }
 
 
@@ -101,23 +131,86 @@ function windowToCanvas(canvas, x, y) {
 example.addEventListener('mousedown', function (e) {
     let res = windowToCanvas(example, e.clientX, e.clientY);
     document.getElementById("debug").value += (" -"+res.x+ "--"+res.y+"- ");
+    coords = {
+        "square": 0,
+        "vertical": 0,
+        "horizontal": 0
+        }
     if (square1.contains(res.x, res.y)){
         let indexes = square1.getCoords(res.x, res.y)
+        coords["square"] = 0;
+        coords["vertical"] = indexes.x;
+        coords["horizontal"] = indexes.y;
         document.getElementById("debug").value += (" *0**"+indexes.x+ "**"+indexes.y+"* ");
     }
     else if (square2.contains(res.x, res.y)){
         let indexes = square2.getCoords(res.x, res.y)
+        coords["square"] = 1;
+        coords["vertical"] = indexes.x;
+        coords["horizontal"] = indexes.y;
         document.getElementById("debug").value += (" *1**"+indexes.x+ "**"+indexes.y+"* ");
     }
         else if (square3.contains(res.x, res.y)){
         let indexes = square3.getCoords(res.x, res.y)
+        coords["square"] = 2;
+        coords["vertical"] = indexes.x;
+        coords["horizontal"] = indexes.y;
         document.getElementById("debug").value += (" *2**"+indexes.x+ "**"+indexes.y+"* ");
     }
         else if (square4.contains(res.x, res.y)){
         let indexes = square4.getCoords(res.x, res.y)
+        coords["square"] = 3;
+        coords["vertical"] = indexes.x;
+        coords["horizontal"] = indexes.y;
         document.getElementById("debug").value += (" *3**"+indexes.x+ "**"+indexes.y+"* ");
     }
     else {
         document.getElementById("debug").value += (" missed!");
     }
+    if (enabled && myMove)
+    {
+        send_move_coords(coords);
+        enabled = false;
+        myMove = false;
+    }
 });
+
+var enabled = false;    // enabled/disable board
+var firstPlayer = false; // first/second player
+var myMove = false;
+
+function started(player_n, opponent_name)
+{
+    if (player_n == "second")
+    {
+        document.getElementById("first_player").value  = opponent_name;
+        document.getElementById("second_player").value = "Me";
+        firstPlayer = false;
+        myMove = false;
+    }
+    else
+    {
+        document.getElementById("first_player").value  = "Me";
+        document.getElementById("second_player").value = opponent_name;
+        firstPlayer = true;
+        myMove = true;
+    }
+
+    enabled = true;
+}
+
+function update_state(board, player_to_move, last_move)
+{
+    if (player_to_move == "second")
+    {
+        myMove = !firstPlayer;
+    }
+    else
+    {
+        myMove = firstPlayer;
+    }
+    square1.draw(get_matrix(0, board));
+    square2.draw(get_matrix(1, board));
+    square3.draw(get_matrix(2, board));
+    square4.draw(get_matrix(3, board));
+}

@@ -14,19 +14,24 @@ function send_ready() {
     socket.send(payload);
 };
 
-function send_move() {
+function send_move_coords(coords) {
     let move_message = {
     version: "v1",
     command: "move",
-    parameters: {
-        "square": 0,
-        "vertical": 0,
-        "horizontal": 0
-        }
+    parameters: coords
     };
     let payload = JSON.stringify(move_message);
     document.getElementById("debug").value += (payload + '\n');
     socket.send(payload);
+};
+
+function send_move() {
+    coords = {
+        "square": 0,
+        "vertical": 0,
+        "horizontal": 0
+        }
+    send_move_coords(coords)
 };
 
 function send_resign() {
@@ -55,6 +60,8 @@ function handle_started(cm_data)
 {
     let player_n = cm_data.player_n;
     let opponent_name = cm_data.opponent_name;
+
+    started(player_n, opponent_name);
 };
 
 function handle_update_state(cm_data)
@@ -62,6 +69,8 @@ function handle_update_state(cm_data)
     let board = cm_data.board;
     let player_to_move = cm_data.player_to_move;
     let last_move = cm_data.last_move;
+
+    update_state(board, player_to_move, last_move);
 };
 
 function handle_offered(cm_data)
