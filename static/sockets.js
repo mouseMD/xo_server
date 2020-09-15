@@ -58,8 +58,8 @@ function send_offer() {
 
 function handle_started(cm_data)
 {
-    let player_n = cm_data.player_n;
-    let opponent_name = cm_data.opponent_name;
+    let player_n = cm_data.ptype;
+    let opponent_name = cm_data.opponent;
 
     started(player_n, opponent_name);
 };

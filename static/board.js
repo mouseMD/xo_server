@@ -183,15 +183,15 @@ function started(player_n, opponent_name)
 {
     if (player_n == "second")
     {
-        document.getElementById("first_player").value  = opponent_name;
-        document.getElementById("second_player").value = "Me";
+        document.getElementById("first_player").textContent  = opponent_name;
+        document.getElementById("second_player").textContent = "Me";
         firstPlayer = false;
         myMove = false;
     }
     else
     {
-        document.getElementById("first_player").value  = "Me";
-        document.getElementById("second_player").value = opponent_name;
+        document.getElementById("first_player").textContent  = "Me";
+        document.getElementById("second_player").textContent = opponent_name;
         firstPlayer = true;
         myMove = true;
     }
