@@ -2,10 +2,12 @@ from aiohttp import web
 import aiohttp_jinja2
 from aiohttp_security import is_anonymous, remember, authorized_userid
 from auth import get_new_anonymous_user_id
+from functools import wraps
 
 
 # decorator to autocreate temporary user ids for not autheticated usera
 def auto_new_user(handler):
+    @wraps(handler)
     async def wrap_handler(request):
         is_logged = not await is_anonymous(request)
         if is_logged:
