@@ -2,9 +2,11 @@ from players import active_players, ActivePlayer, \
     get_suitable_opponent, add_to_waiting_list, offers
 import xo_app_stub
 from db import add_game_to_db
+import logging
 
 
 async def ready_handler(params, user_id, ws):
+    logging.info("Handling 'ready' command, user_id : {}".format(user_id))
     # add new active player
     player = ActivePlayer(ws)
     active_players[user_id] = player
@@ -29,6 +31,7 @@ async def ready_handler(params, user_id, ws):
 
 
 async def resign_handler(params, user_id, ws):
+    logging.info("Handling 'resign' command, user_id : {}".format(user_id))
     # remove active player and stop game if exists
     player = active_players.pop(user_id)
     if player.game_id is not None:
@@ -50,6 +53,7 @@ async def resign_handler(params, user_id, ws):
 
 
 async def move_handler(params, user_id, ws):
+    logging.info("Handling 'move' command, user_id : {}".format(user_id))
     player = active_players[user_id]
     opponent = active_players[player.opponent_id]
     # update game
@@ -81,6 +85,7 @@ async def move_handler(params, user_id, ws):
 
 
 async def offer_handler(params, user_id, ws):
+    logging.info("Handling 'offer' command, user_id : {}".format(user_id))
     player = active_players[user_id]
     opponent = active_players[player.opponent_id]
 
@@ -122,9 +127,9 @@ async def handle_command(cmd_data, user_id, ws):
         if command in command_handlers:
             await command_handlers[command](parameters, user_id, ws)
         else:
-            print('unknown command {} found!'.format(command))
+            logging.info('unknown command {} found! user_id: {}'.format(command, user_id))
     else:
-        print('Not supported protocol version: {} found!'.format(cmd_data['version']))
+        logging.info('Not supported protocol version: {} found! user_id: {}'.format(cmd_data['version'], user_id))
 
 
 async def handle_error(user_id):

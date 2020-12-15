@@ -8,9 +8,13 @@ import jinja2
 from routes import setup_routes, setup_static_routes
 from settings import BASE_DIR
 from auth import MyAuthorizationPolicy
+import logging
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+                        datefmt='%m-%d %H:%M')
     loop = asyncio.get_event_loop()
     middleware = session_middleware(EncryptedCookieStorage(b'Thirty two length bytes key.    '))
     app = web.Application(middlewares=[middleware])
