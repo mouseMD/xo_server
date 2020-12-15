@@ -1,4 +1,5 @@
-from views import index, websocket_handler, wait_game
+from views import index, wait_game
+from web_socket import websocket_handler
 from settings import BASE_DIR
 
 
