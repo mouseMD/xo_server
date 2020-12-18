@@ -28,6 +28,7 @@ class Player:
         self.side = None
         self.entry = None
         self.status = "idle"
+        self.opp_id = None
 
     def add_entry(self, entry):
         self.entry = entry
@@ -42,6 +43,9 @@ class Player:
         for key, val in game.players:
             if val == self.player_id:
                 self.side = key
+            else:
+                self.opp_id = val
+
         self.entry = None
         self.status = "playing"
 
@@ -49,6 +53,7 @@ class Player:
         self.game_id = None
         self.side = None
         self.status = "idle"
+        self.opp_id = None
 
 
 class ConnectedPlayer(Player):
@@ -193,6 +198,12 @@ class Playground:
 
     def side(self, user_id):
         return self.users[user_id].side
+
+    def game_id(self, user_id):
+        return self.users[user_id].game_id
+
+    def opp_id(self, user_id):
+        return self.users[user_id].opp_id
 
 
 class ActivePlayer:

@@ -30,23 +30,18 @@ async def ready_handler(params, user_id, ws):
 async def resign_handler(params, user_id, ws):
     logging.info("Handling 'resign' command, user_id : {}".format(user_id))
     # remove active player and stop game if exists
-    player = active_players.pop(user_id)
-    if player.game_id is not None:
-        opp = active_players.pop(player.opponent_id)
-        responce1 = await construct_game_over(result="loss",
-                                              win_pos=None,
-                                              cause="resignation")
-        responce2 = await construct_game_over(result="win",
-                                              win_pos=None,
-                                              cause="resignation")
-        await ws.send_json(responce1)
-        await opp.ws.send_json(responce2)
-        # save game to db
-        await add_game_to_db()
-        # remove game from app
-        xo_app_stub.release_game(player.game_id)
-        await opp.ws.close()
-    await ws.close()
+    # save game to db
+    await add_game_to_db()
+    opp_id = global_playground.opp_id(user_id)
+    global_playground.remove_game(global_playground.game_id(user_id))
+    response1 = await construct_game_over(result="loss",
+                                          win_pos=None,
+                                          cause="resignation")
+    response2 = await construct_game_over(result="win",
+                                          win_pos=None,
+                                          cause="resignation")
+    await ws.send_json(response1)
+    await global_sockets[opp_id].send_json(response2)
 
 
 async def move_handler(params, user_id, ws):
