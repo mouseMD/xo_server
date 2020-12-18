@@ -3,6 +3,7 @@ from players import active_players, ActivePlayer, \
 import xo_app_stub
 from db import add_game_to_db
 import logging
+from global_defs import global_sockets, global_playground
 
 
 async def ready_handler(params, user_id, ws):
