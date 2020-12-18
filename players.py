@@ -90,6 +90,11 @@ class PlaygroundException(Exception):
         super().__init__()
 
 
+class AlreadyRegistered(PlaygroundException):
+    def __init__(self):
+        super().__init__()
+
+
 class Playground:
     def __init__(self):
         self.users = {}
@@ -99,7 +104,7 @@ class Playground:
 
     def register(self, user_id):
         if self.is_registered(user_id):
-            raise PlaygroundException()
+            raise AlreadyRegistered()
         new_player = Player(user_id)
         self.users[user_id] = new_player
 

@@ -149,6 +149,17 @@ async def handle_error(user_id):
         await opp.ws.close()
 
 
+async def construct_error(msg):
+    data = {
+        'version': 'v1',
+        'command': 'error',
+        'parameters': {
+            'message': msg
+        }
+    }
+    return data
+
+
 async def construct_started(opp_id, ptype):
     data = {
         'version': 'v1',
