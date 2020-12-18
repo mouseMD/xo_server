@@ -12,8 +12,10 @@ class Entry:
         self.entry_type = None  # broadcast, bot, user
 
     @staticmethod
-    def from_params(self, params):
-        pass
+    def from_params(user_id, params):
+        e = Entry()
+        e.user_id = user_id
+        return e
 
     def match(self, entry):
         return True
@@ -95,6 +97,16 @@ class AlreadyRegistered(PlaygroundException):
         super().__init__()
 
 
+class NotRegistered(PlaygroundException):
+    def __init__(self):
+        super().__init__()
+
+
+class AlreadyPlaying(PlaygroundException):
+    def __init__(self):
+        super().__init__()
+
+
 class Playground:
     def __init__(self):
         self.users = {}
@@ -127,9 +139,9 @@ class Playground:
     def add_entry(self, entry):
         user_id = entry.user_id
         if not self.is_registered(user_id):
-            raise PlaygroundException()
+            raise NotRegistered()
         if self.is_waiting(user_id) or self.is_playing(user_id):
-            raise PlaygroundException()
+            raise AlreadyPlaying()
         player = self.users[user_id]
         player.add_entry(entry)
         self.ready_list.add(user_id)
@@ -161,6 +173,10 @@ class Playground:
             player1.add_game(new_game)
             player2.add_game(new_game)
             self.games[game_id] = new_game
+            self.ready_list.remove(uid1)
+            self.ready_list.remove(uid2)
+            self.playing_list.add(uid1)
+            self.playing_list.add(uid2)
         else:
             raise PlaygroundException()
 
@@ -169,10 +185,14 @@ class Playground:
             game = self.games[game_id]
             for user_id in game.players.values():
                 self.users[user_id].remove_game()
+                self.playing_list.remove(user_id)
             game.clear()
             self.games.pop(game_id)
         else:
             raise PlaygroundException()
+
+    def side(self, user_id):
+        return self.users[user_id].side
 
 
 class ActivePlayer:

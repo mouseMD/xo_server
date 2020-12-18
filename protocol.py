@@ -4,31 +4,27 @@ import xo_app_stub
 from db import add_game_to_db
 import logging
 from global_defs import global_sockets, global_playground
+from players import Entry, AlreadyPlaying
 
 
 async def ready_handler(params, user_id, ws):
     logging.info("Handling 'ready' command, user_id : {}".format(user_id))
-    # add new active player
-    player = ActivePlayer(ws)
-    active_players[user_id] = player
-    # check if exist suitable opponent
-    match_data = await get_suitable_opponent(params)
-    if match_data is not None:
-        # create new game in app
-        opp_id = match_data[0]
-        ptype = 'first' if match_data[1] == 0 else 'second'
-        opp_ptype = 'second' if match_data[1] == 0 else 'first'
-        game_id = xo_app_stub.create_new_game()
-        opponent = active_players[opp_id]
-        opponent.start_game(game_id, user_id, opp_ptype)
-        player.start_game(game_id, opp_id, ptype)
-        # send "started" responces to both players
-        responce1 = await construct_started(opp_id, opp_ptype)
-        responce2 = await construct_started(user_id, ptype)
-        await ws.send_json(responce1)
-        await opponent.ws.send_json(responce2)
+    try:
+        global_playground.add_entry(Entry.from_params(user_id, params))
+    except AlreadyPlaying:
+        await ws.send_json(await construct_error('New entry rejected, already waiting game or playing'))
     else:
-        await add_to_waiting_list(user_id, {})
+        await ws.send_json(await construct_waiting())
+        # check for suitable opponent
+        opp_id = global_playground.find_match(user_id)
+        if opp_id is not None:
+            # create new game
+            global_playground.add_game(user_id, opp_id)
+            # send "started" responces to both players
+            response1 = await construct_started(opp_id, global_playground.side(opp_id))
+            response2 = await construct_started(user_id, global_playground.side(user_id))
+            await ws.send_json(response1)
+            await global_sockets[opp_id].send_json(response2)
 
 
 async def resign_handler(params, user_id, ws):
@@ -147,6 +143,15 @@ async def handle_error(user_id):
         # remove game from app
         xo_app_stub.release_game()
         await opp.ws.close()
+
+
+async def construct_waiting():
+    data = {
+        'version': 'v1',
+        'command': 'waiting',
+        'parameters': {}
+    }
+    return data
 
 
 async def construct_error(msg):
