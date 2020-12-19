@@ -62,12 +62,35 @@ class ConnectedPlayer(Player):
         self.ws = ws
 
 
+class Move:
+    def __init__(self):
+        self.square = None
+        self.vertical = None
+        self.horizontal = None
+        self.player_to_move = None
+
+    @staticmethod
+    def create_move(sq, ver, hor, ptm):
+        m = Move()
+        m.square = sq
+        m.vertical = ver
+        m.horizontal = hor
+        m.player_to_move = ptm
+        return m
+
+
+class GameException(Exception):
+    def __init__(self):
+        super().__init__()
+
+
 class Game:
     def __init__(self):
         self.game_id = None
         self.players = {}   # {"first" : uid1, "second" : uid2}
         self.status = "idle"
         self.game_type = None
+        self.result = None
 
     def setup(self, entry1, entry2):
         self.game_type = entry1.game_type   # or entry2.game_type
@@ -90,6 +113,41 @@ class Game:
         self.players = {}
         self.status = "idle"
         self.game_type = None
+
+    def first(self):
+        return self.players["first"]
+
+    def second(self):
+        return self.players["second"]
+
+    def set_result(self, res):
+        self.result = res
+
+    def set_new_move(self, move):
+        if move.player_to_move == self.player_to_move():
+            xo_app_stub.set_new_move(self.game_id, move.player_to_move, [move.square, move.vertical, move.horizontal])
+        else:
+            raise GameException()
+
+    def get_board(self):
+        return xo_app_stub.get_board(self.game_id)
+
+    def player_to_move(self):
+        return xo_app_stub.get_player_to_move(self.game_id)
+
+    def is_finished(self):
+        return xo_app_stub.finished(self.game_id)
+
+    def get_result(self):
+        if self.result is None:
+            self.result = xo_app_stub.result(self.game_id)
+        return self.result
+
+    def get_win_pos(self):
+        return xo_app_stub.get_win_coords(self.game_id)
+
+    def get_moves(self):
+        return xo_app_stub.get_moves(self.game_id)
 
 
 class PlaygroundException(Exception):
@@ -204,6 +262,9 @@ class Playground:
 
     def opp_id(self, user_id):
         return self.users[user_id].opp_id
+
+    def game(self, game_id):
+        return self.games[game_id]
 
 
 class ActivePlayer:

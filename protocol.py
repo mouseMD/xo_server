@@ -4,7 +4,7 @@ import xo_app_stub
 from db import add_game_to_db
 import logging
 from global_defs import global_sockets, global_playground
-from players import Entry, AlreadyPlaying
+from players import Entry, AlreadyPlaying, Move
 
 
 async def ready_handler(params, user_id, ws):
@@ -46,34 +46,30 @@ async def resign_handler(params, user_id, ws):
 
 async def move_handler(params, user_id, ws):
     logging.info("Handling 'move' command, user_id : {}".format(user_id))
-    player = active_players[user_id]
-    opponent = active_players[player.opponent_id]
-    # update game
-    game_id = player.game_id
-    xo_app_stub.set_new_move(game_id, player.ptype,
-                             [params['square'], params['vertical'], params['horizontal']])
-    board = xo_app_stub.get_board(game_id)
-    player_to_move = xo_app_stub.get_player_to_move(game_id)
+    game_id = global_playground.game_id(user_id)
+    game = global_playground.game()
+    game.set_new_move(Move.create_move(global_playground.side(user_id),
+                                       params['square'], params['vertical'], params['horizontal']))
+    board = game.get_board()
+    player_to_move = game.player_to_move()
     last_move = params
-    responce1 = await construct_update_state(board, player_to_move, last_move)
-    responce2 = await construct_update_state(board, player_to_move, last_move)
-    await ws.send_json(responce1)
-    await opponent.ws.send_json(responce2)
+    response1 = await construct_update_state(board, player_to_move, last_move)
+    response2 = await construct_update_state(board, player_to_move, last_move)
+    await ws.send_json(response1)
+    opp_id = global_playground.opp_id(user_id)
+    await global_sockets[opp_id].send_json(response2)
     # check for game over
-    if xo_app_stub.finished(game_id):
-        result = xo_app_stub.result(game_id)
-        win_pos = xo_app_stub.get_win_coords(game_id)
-        responce1 = await construct_game_over(result, win_pos, "win rule")
-        responce2 = await construct_game_over(result, win_pos, "win rule")
-        await ws.send_json(responce1)
-        await opponent.ws.send_json(responce2)
+    if game.is_finished():
+        result = game.get_result()
+        win_pos = game.get_win_pos()
+        response1 = await construct_game_over(result, win_pos, "win rule")
+        response2 = await construct_game_over(result, win_pos, "win rule")
+        await ws.send_json(response1)
+        await global_sockets[opp_id].send_json(response2)
         # save game to db
-        moves = xo_app_stub.get_moves(game_id)
+        moves = game.get_moves()
         await add_game_to_db()
-        # remove game from app
-        xo_app_stub.release_game(game_id)
-        await opponent.ws.close()
-        await ws.close()
+        global_playground.remove_game(game_id)
 
 
 async def offer_handler(params, user_id, ws):
