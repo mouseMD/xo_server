@@ -1,6 +1,3 @@
-from players import active_players, ActivePlayer, \
-    get_suitable_opponent, add_to_waiting_list, offers
-import xo_app_stub
 from db import add_game_to_db
 import logging
 from global_defs import global_sockets, global_playground
@@ -31,9 +28,12 @@ async def resign_handler(params, user_id, ws):
     logging.info("Handling 'resign' command, user_id : {}".format(user_id))
     # remove active player and stop game if exists
     # save game to db
-    await add_game_to_db()
+    game_id = global_playground.game_id(user_id)
+    game = global_playground.game(game_id)
+    game.set_result("result")
+    await add_game_to_db(game)
     opp_id = global_playground.opp_id(user_id)
-    global_playground.remove_game(global_playground.game_id(user_id))
+    global_playground.remove_game(game_id)
     response1 = await construct_game_over(result="loss",
                                           win_pos=None,
                                           cause="resignation")
@@ -67,8 +67,7 @@ async def move_handler(params, user_id, ws):
         await ws.send_json(response1)
         await global_sockets[opp_id].send_json(response2)
         # save game to db
-        moves = game.get_moves()
-        await add_game_to_db()
+        await add_game_to_db(game)
         global_playground.remove_game(game_id)
 
 
@@ -112,8 +111,8 @@ async def handle_error(user_id):
         # save game to db
         game_id = global_playground.game_id(user_id)
         game = global_playground.game(game_id)
-        moves = game.get_moves()
-        await add_game_to_db()
+        game.set_result("result")
+        await add_game_to_db(game)
         global_playground.remove_game(game_id)
         global_playground.unregister(user_id)
     finally:
