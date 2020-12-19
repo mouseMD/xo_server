@@ -1,4 +1,5 @@
 import xo_app_stub
+from typing import Optional
 
 
 class Entry:
@@ -93,7 +94,7 @@ class Game:
     def setup(self, entry1, entry2):
         self.game_type = entry1.game_type   # or entry2.game_type
         if entry1.side == "first" or entry2.side == "second":
-            self.players = {"first" : entry1.user_id, "second": entry2.user_id}
+            self.players = {"first": entry1.user_id, "second": entry2.user_id}
         else:
             self.players = {"first": entry2.user_id, "second": entry1.user_id}
 
@@ -174,38 +175,70 @@ class AlreadyWaiting(PlaygroundException):
 
 
 class Playground:
+    """
+    Class, responsible for players and games management.
+    """
     def __init__(self):
         self.users = {}
         self.games = {}
         self.ready_list = set()
         self.playing_list = set()
 
-    def register(self, user_id):
+    def register(self, user_id: str) -> None:
+        """
+        Create new player with a given user id.
+
+        user_id must be unique. If not, AlreadyRegistered() exception is raised.
+        """
         if self.is_registered(user_id):
             raise AlreadyRegistered()
         new_player = Player(user_id)
         self.users[user_id] = new_player
 
-    def unregister(self, user_id):
+    def unregister(self, user_id: str) -> None:
+        """
+        Remove player with a given user id.
+
+        Only applicable if the user already exists and is in 'idle' state.
+        If not exists or in 'waiting' or 'playing' state an appropriate exception is raised.
+        """
         if not self.is_registered(user_id):
             raise NotRegistered()
+        # todo replace PlaygroundException()
         if self.is_waiting(user_id) or self.is_playing(user_id):
             raise PlaygroundException()
         self.users.pop(user_id)
 
-    def is_registered(self, user_id):
+    def is_registered(self, user_id: str) -> bool:
+        """
+        Check player existence by user id.
+        """
         return user_id in self.users
 
-    def is_waiting(self, user_id):
+    def is_waiting(self, user_id: str) -> bool:
+        """
+        Check if player with a given user id is in 'waiting' state.
+        """
         return user_id in self.ready_list
 
-    def is_playing(self, user_id):
+    def is_playing(self, user_id: str) -> bool:
+        """
+        Check if player with a given user id is in 'playing' state.
+        """
         return user_id in self.playing_list
 
-    def add_entry(self, entry):
+    def add_entry(self, entry: Entry) -> None:
+        """
+        Add new entry with user preferences for a new game.
+
+        Only applicable if user is registered and in an idle state.
+        If not, the appropriate exception is raised.
+        The user state becomes 'waiting'.
+        """
         user_id = entry.user_id
         if not self.is_registered(user_id):
             raise NotRegistered()
+        # todo replace for NotIdleException()
         if self.is_waiting(user_id):
             raise AlreadyWaiting()
         if self.is_playing(user_id):
@@ -214,15 +247,29 @@ class Playground:
         player.add_entry(entry)
         self.ready_list.add(user_id)
 
-    def remove_entry(self, user_id):
+    def remove_entry(self, user_id: str) -> None:
+        """
+        Remove entry for a given user id.
+
+        Applicable only in 'waiting' state. If not,
+        NotWaitingException() is raised.
+        """
         if self.is_waiting(user_id):
             player = self.users[user_id]
             player.remove_entry()
             self.ready_list.remove(user_id)
         else:
+            # todo replace for NotWaitingException()
             raise PlaygroundException()
 
-    def find_match(self, user_id):
+    def find_match(self, user_id: str) -> Optional[str]:
+        """
+        Find user that matches as an opponent for a given user id,
+        according to submitted entries.
+
+        Returns user id of the opponent or None if no match was found.
+        If user is not in 'waiting' state, NotWaitingException() is raised.
+        """
         if self.is_waiting(user_id):
             for uid in self.ready_list:
                 if uid is not user_id:
@@ -230,9 +277,16 @@ class Playground:
                         return uid
             return None
         else:
+            # todo replace for NotWaitingException()
             raise PlaygroundException()
 
-    def add_game(self, uid1, uid2):
+    def add_game(self, uid1: str, uid2: str) -> None:
+        """
+        Create new game with uid1 and uid2 as players ids.
+
+        If one or both users are not in 'waiting' state, NotWaitingException() is raised.
+        Both users transit to 'playing' state.
+        """
         if self.is_waiting(uid1) and self.is_waiting(uid2):
             new_game = Game()
             new_game.setup(self.users[uid1].entry, self.users[uid2].entry)
@@ -246,27 +300,64 @@ class Playground:
             self.playing_list.add(uid1)
             self.playing_list.add(uid2)
         else:
+            # todo replace for NotWaitingException()
             raise PlaygroundException()
 
-    def remove_game(self, game_id):
+    def remove_game(self, game_id: int) -> None:
+        """
+        Remove game with a given game id.
+
+        Just removes instance of game and sets both users to 'idle' state.
+        If game not found, raises NoGameFoundException()
+        """
         if game_id in self.games:
             game = self.games[game_id]
+            # todo call user.remove_game() in game.clear()
             for user_id in game.players.values():
                 self.users[user_id].remove_game()
                 self.playing_list.remove(user_id)
             game.clear()
             self.games.pop(game_id)
         else:
+            # todo replace for NoGameFound()
             raise PlaygroundException()
 
-    def side(self, user_id):
+    def side(self, user_id: str) -> str:
+        """
+        Return side of player with given user id.
+
+        Player must be in 'playing' state.
+        If not, raises NotPlayingException()
+        """
+        # todo add try block
         return self.users[user_id].side
 
-    def game_id(self, user_id):
+    def game_id(self, user_id: str) -> int:
+        """
+        Return id of game, played by player with given user id.
+
+        Player must be in 'playing' state.
+        If not, raises NotPlayingException()
+        """
+        # todo add try block
         return self.users[user_id].game_id
 
-    def opp_id(self, user_id):
+    def opp_id(self, user_id: str) -> str:
+        """
+        Return opponent user id.
+
+        Player must be in 'playing' state.
+        If not, raises NotPlayingException()
+        """
+        # todo add try block
         return self.users[user_id].opp_id
 
-    def game(self, game_id):
+    def game(self, game_id: str) -> Game:
+        """
+        Return game instance with given user id.
+
+        Player must be in 'playing' state.
+        If not, raises NoGameFound()
+        """
+        # todo replace for NoGameFound()
         return self.games[game_id]
