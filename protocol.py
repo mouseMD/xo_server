@@ -58,7 +58,7 @@ async def move_handler(params, user_id, ws):
     await ws.send_json(response1)
     opp_id = global_playground.opp_id(user_id)
     await global_sockets[opp_id].send_json(response2)
-    # check for game over
+    # check for game over by rules of board
     if game.is_finished():
         result = game.get_result()
         win_pos = game.get_win_pos()
@@ -72,34 +72,6 @@ async def move_handler(params, user_id, ws):
         global_playground.remove_game(game_id)
 
 
-async def offer_handler(params, user_id, ws):
-    logging.info("Handling 'offer' command, user_id : {}".format(user_id))
-    player = active_players[user_id]
-    opponent = active_players[player.opponent_id]
-
-    # if answer to offer
-    if player.opponent_id in offers:
-        offers.remove(player.opponent_id)
-        responce1 = await construct_game_over(result="draw",
-                                              win_pos=None,
-                                              cause="agreement")
-        responce2 = await construct_game_over(result="draw",
-                                              win_pos=None,
-                                              cause="agreement")
-        await ws.send_json(responce1)
-        await opponent.ws.send_json(responce2)
-        # save game to db
-        await add_game_to_db()
-        # remove game from app
-        xo_app_stub.release_game(player.game_id)
-        await opponent.ws.close()
-        await ws.close()
-    else:
-        offers.append(user_id)
-        responce = await construct_offered()
-        await opponent.ws.send_json(responce)
-
-
 async def handle_command(cmd_data, user_id, ws):
     if cmd_data["version"] == "v1":
         command = cmd_data["command"]
@@ -109,7 +81,7 @@ async def handle_command(cmd_data, user_id, ws):
             'ready': ready_handler,
             'resign': resign_handler,
             'move': move_handler,
-            'offer': offer_handler
+            #'offer': offer_handler
         }
 
         if command in command_handlers:
