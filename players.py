@@ -170,6 +170,11 @@ class AlreadyPlaying(PlaygroundException):
         super().__init__()
 
 
+class AlreadyWaiting(PlaygroundException):
+    def __init__(self):
+        super().__init__()
+
+
 class Playground:
     def __init__(self):
         self.users = {}
@@ -185,7 +190,7 @@ class Playground:
 
     def unregister(self, user_id):
         if not self.is_registered(user_id):
-            raise PlaygroundException()
+            raise NotRegistered()
         if self.is_waiting(user_id) or self.is_playing(user_id):
             raise PlaygroundException()
         self.users.pop(user_id)
@@ -203,7 +208,9 @@ class Playground:
         user_id = entry.user_id
         if not self.is_registered(user_id):
             raise NotRegistered()
-        if self.is_waiting(user_id) or self.is_playing(user_id):
+        if self.is_waiting(user_id):
+            raise AlreadyWaiting()
+        if self.is_playing(user_id):
             raise AlreadyPlaying()
         player = self.users[user_id]
         player.add_entry(entry)

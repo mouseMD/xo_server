@@ -4,7 +4,7 @@ import xo_app_stub
 from db import add_game_to_db
 import logging
 from global_defs import global_sockets, global_playground
-from players import Entry, AlreadyPlaying, Move
+from players import Entry, AlreadyPlaying, Move, NotRegistered, AlreadyWaiting
 
 
 async def ready_handler(params, user_id, ws):
@@ -47,7 +47,7 @@ async def resign_handler(params, user_id, ws):
 async def move_handler(params, user_id, ws):
     logging.info("Handling 'move' command, user_id : {}".format(user_id))
     game_id = global_playground.game_id(user_id)
-    game = global_playground.game()
+    game = global_playground.game(game_id)
     game.set_new_move(Move.create_move(global_playground.side(user_id),
                                        params['square'], params['vertical'], params['horizontal']))
     board = game.get_board()
@@ -93,19 +93,30 @@ async def handle_command(cmd_data, user_id, ws):
 
 
 async def handle_error(user_id):
-    # remove active player and stop game if exists
-    player = active_players.pop(user_id)
-    if player.game_id is not None:
-        opp = active_players.pop(player.opponent_id)
-        responce = await construct_game_over(result="win",
+    # player with user_id disconnected or error happened
+    try:
+        global_playground.unregister(user_id)
+    except NotRegistered:
+        pass
+    except AlreadyWaiting:
+        # there is entry, there is no game
+        global_playground.remove_entry(user_id)
+        global_playground.unregister(user_id)
+    except AlreadyPlaying:
+        # there is game, there is no entry
+        opp_id = global_playground.opp_id(user_id)
+        response = await construct_game_over(result="win",
                                              win_pos=None,
                                              cause="interruption")
-        await opp.ws.send_json(responce)
+        await global_sockets[opp_id].send_json(response)
         # save game to db
+        game_id = global_playground.game_id(user_id)
+        game = global_playground.game(game_id)
+        moves = game.get_moves()
         await add_game_to_db()
-        # remove game from app
-        xo_app_stub.release_game()
-        await opp.ws.close()
+        global_playground.remove_game()
+    finally:
+        global_sockets.pop(user_id)
 
 
 async def construct_waiting():
