@@ -114,7 +114,8 @@ async def handle_error(user_id):
         game = global_playground.game(game_id)
         moves = game.get_moves()
         await add_game_to_db()
-        global_playground.remove_game()
+        global_playground.remove_game(game_id)
+        global_playground.unregister(user_id)
     finally:
         global_sockets.pop(user_id)
 
