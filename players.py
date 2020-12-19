@@ -83,7 +83,30 @@ class GameException(Exception):
         super().__init__()
 
 
+class GameAlreadyRunningException(GameException):
+    def __init__(self):
+        super().__init__()
+
+
+class GameNotReadyException(GameException):
+    def __init__(self):
+        super().__init__()
+
+
+class GameNotRunningException(GameException):
+    def __init__(self):
+        super().__init__()
+
+
+class WrongPlayerException(GameException):
+    def __init__(self):
+        super().__init__()
+
+
 class Game:
+    """
+    Wraps game state and logic.
+    """
     def __init__(self):
         self.game_id = None
         self.players = {}   # {"first" : uid1, "second" : uid2}
@@ -91,61 +114,154 @@ class Game:
         self.game_type = None
         self.result = None
 
-    def setup(self, entry1, entry2):
-        self.game_type = entry1.game_type   # or entry2.game_type
-        if entry1.side == "first" or entry2.side == "second":
-            self.players = {"first": entry1.user_id, "second": entry2.user_id}
-        else:
-            self.players = {"first": entry2.user_id, "second": entry1.user_id}
+    def setup(self, entry1: Entry, entry2: Entry) -> None:
+        """
+        Setup game state before starting actual play based on players' entries.
 
-    def start(self):
+        If called when game is in 'running' state, raises GameAlreadyRunnningException().
+        """
+        if self.status == "waiting":
+            self.game_type = entry1.game_type   # or entry2.game_type
+            if entry1.side == "first" or entry2.side == "second":
+                self.players = {"first": entry1.user_id, "second": entry2.user_id}
+            else:
+                self.players = {"first": entry2.user_id, "second": entry1.user_id}
+            # todo here should be call for player.add_game(), but now there is no references to players
+            self.status = "ready"
+        else:
+            raise GameAlreadyRunningException()
+
+    def start(self) -> int:
+        """
+        Start actual game by calling game creation from xo_app.
+
+        Returns integer - unique global game id.
+        If called when game is not in 'ready' state, raises GameNotReadyException().
+        """
+        if self.status != 'ready':
+            raise GameNotReadyException()
         self.game_id = xo_app_stub.create_new_game()
         self.status = "running"
         return self.game_id
 
-    def is_removable(self):
-        return self.status == "idle"
+    def clear(self) -> None:
+        """
+        Remove actual game.
 
-    def clear(self):
-        xo_app_stub.release_game(self.game_id)
+        Game transits to 'idle' state.
+        """
+        if self.status == "running":
+            xo_app_stub.release_game(self.game_id)
         self.game_id = None
         self.players = {}
         self.status = "idle"
         self.game_type = None
 
-    def first(self):
+    def first(self) -> str:
+        """
+        Return user id for the first player.
+
+        Game must be in 'ready' or 'running' state, else GameNotReadyException() is raised.
+        """
+        if self.status == 'idle':
+            raise GameNotReadyException()
         return self.players["first"]
 
-    def second(self):
+    def second(self) -> str:
+        """
+        Return user id for the second player.
+
+        Game must be in 'ready' or 'running' state, else GameNotReadyException() is raised.
+        """
+        if self.status == 'idle':
+            raise GameNotReadyException()
         return self.players["second"]
 
-    def set_result(self, res):
+    def set_result(self, res: str) -> None:
+        """
+        Deliberately set result of game.
+
+        Used for situation such as resignation, draw agreement or disconnection.
+        # todo define possible result types
+
+        Game must be in 'running' state, else GameNotRunningException() is raised.
+        """
+        if self.status != 'running':
+            raise GameNotRunningException()
         self.result = res
 
-    def set_new_move(self, move):
+    def set_new_move(self, move: Move) -> None:
+        """
+        Set new move in this game.
+
+        If player tries to move out of his order, WrongPlayerException() is raised.
+        """
+        if self.status != 'running':
+            raise GameNotRunningException()
         if move.player_to_move == self.player_to_move():
             xo_app_stub.set_new_move(self.game_id, move.player_to_move, [move.square, move.vertical, move.horizontal])
         else:
-            raise GameException()
+            raise WrongPlayerException()
 
-    def get_board(self):
+    def get_board(self) -> str:
+        """
+        Get board state.
+
+        # todo explain string representation
+        """
+        if self.status != 'running':
+            raise GameNotRunningException()
         return xo_app_stub.get_board(self.game_id)
 
-    def player_to_move(self):
+    def player_to_move(self) -> str:
+        """
+        Get player to move now.
+
+        # todo explain string representation
+        """
+        if self.status != 'running':
+            raise GameNotRunningException()
         return xo_app_stub.get_player_to_move(self.game_id)
 
-    def is_finished(self):
+    def is_finished(self) -> bool:
+        """
+        Check game ending by its internal rules.
+
+        """
+        if self.status != 'running':
+            raise GameNotRunningException()
         return xo_app_stub.finished(self.game_id)
 
-    def get_result(self):
+    def get_result(self) -> str:
+        """
+        Get result of game.
+
+        # todo explain string representation
+        """
+        if self.status != 'running':
+            raise GameNotRunningException()
         if self.result is None:
             self.result = xo_app_stub.result(self.game_id)
         return self.result
 
-    def get_win_pos(self):
+    def get_win_pos(self) -> str:
+        """
+        Get winning sequence of squares.
+
+        # todo explain string representation
+        """
+        if self.status != 'running':
+            raise GameNotRunningException()
         return xo_app_stub.get_win_coords(self.game_id)
 
-    def get_moves(self):
+    def get_moves(self) -> str:
+        """
+        Get full notation of moves.
+
+        # todo explain string representation
+        """
+        if self.status != 'running':
+            raise GameNotRunningException()
         return xo_app_stub.get_moves(self.game_id)
 
 
