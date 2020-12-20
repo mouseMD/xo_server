@@ -16,29 +16,52 @@ class Entry:
         e.user_id = user_id
         return e
 
+    # todo matching functionality must be in separate class
     def match(self, entry):
         return True
 
 
 class Player:
-    def __init__(self, player_id):
+    """
+    Incapsulates information about player.
+
+    Player can be in one of three states: idle, waiting, playing.
+    Starts always in 'idle' state.
+    In waiting state contains reference to entry. Enters in this state by calling
+    'add_entry' and exits by calling 'remove_entry()' or 'add_game()'.
+    In playing state contains reference to game and caches info about side and opponent.
+    Enters in this state by calling 'add_game()' and exits by calling 'remove_game()'.
+    """
+    # todo add exceptions for out-of-state usage
+    def __init__(self, player_id: str) -> None:
         self.player_id = player_id
-        self.game_id = None
-        self.side = None
-        self.entry = None
         self.status = "idle"
+        # for waiting state
+        self.entry = None
+        # for playing state
+        self.game = None
+        self.side = None
         self.opp_id = None
 
-    def add_entry(self, entry):
+    def add_entry(self, entry: Entry) -> None:
+        """
+        Move to 'waiting' state with entry.
+        """
         self.entry = entry
         self.status = "waiting"
 
-    def remove_entry(self):
+    def remove_entry(self) -> None:
+        """
+        Remove entry and transit to 'idle' state.
+        """
         self.entry = None
         self.status = "idle"
 
-    def add_game(self, game):
-        self.game_id = game.game_id
+    def add_game(self, game: Game) -> None:
+        """
+        Move to 'playing' state with game.
+        """
+        self.game = game
         for key, val in game.players:
             if val == self.player_id:
                 self.side = key
@@ -48,11 +71,23 @@ class Player:
         self.entry = None
         self.status = "playing"
 
-    def remove_game(self):
-        self.game_id = None
+    def remove_game(self) -> None:
+        """
+        Remove entry and transit to 'idle' state.
+        """
+        self.game = None
         self.side = None
         self.status = "idle"
         self.opp_id = None
+
+    def is_idle(self) -> bool:
+        return self.status == "idle"
+
+    def is_waiting(self) -> bool:
+        return self.status == "waiting"
+
+    def is_playing(self) -> bool:
+        return self.status == "playing"
 
 
 class ConnectedPlayer(Player):
