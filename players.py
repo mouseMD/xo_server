@@ -103,6 +103,11 @@ class WrongPlayerException(GameException):
         super().__init__()
 
 
+class WrongResultException(GameException):
+    def __init__(self):
+        super().__init__()
+
+
 class Game:
     """
     Wraps game state and logic.
@@ -112,7 +117,7 @@ class Game:
         self.players = {}   # {"first" : uid1, "second" : uid2}
         self.status = "idle"
         self.game_type = None
-        self.result = None
+        self.result = 'none'
 
     def setup(self, entry1: Entry, entry2: Entry) -> None:
         """
@@ -182,12 +187,14 @@ class Game:
         Deliberately set result of game.
 
         Used for situation such as resignation, draw agreement or disconnection.
-        # todo define possible result types
-
         Game must be in 'running' state, else GameNotRunningException() is raised.
+        Accepted results: 'first_win', 'second_win', 'draw', 'none'.
         """
         if self.status != 'running':
             raise GameNotRunningException()
+        results = {'first_win', 'second_win', 'draw', 'none'}
+        if res not in results:
+            raise WrongResultException()
         self.result = res
 
     def set_new_move(self, move: Move) -> None:
@@ -207,7 +214,7 @@ class Game:
         """
         Get board state.
 
-        # todo explain string representation
+        Board state represented as a string.
         """
         if self.status != 'running':
             raise GameNotRunningException()
@@ -217,7 +224,7 @@ class Game:
         """
         Get player to move now.
 
-        # todo explain string representation
+        Returns one of strings: 'first' or 'second'.
         """
         if self.status != 'running':
             raise GameNotRunningException()
@@ -226,29 +233,36 @@ class Game:
     def is_finished(self) -> bool:
         """
         Check game ending by its internal rules.
-
         """
         if self.status != 'running':
             raise GameNotRunningException()
         return xo_app_stub.finished(self.game_id)
 
+    def update_result(self) -> None:
+        """
+        Set result by rules of game.
+
+        Result may be one of strings: 'first_win', 'second_win', 'draw', 'none'.
+        """
+        if self.status != 'running':
+            raise GameNotRunningException()
+        self.result = xo_app_stub.result(self.game_id)
+
     def get_result(self) -> str:
         """
         Get result of game.
 
-        # todo explain string representation
+        Result may be one of strings: 'first_win', 'second_win', 'draw', 'none'.
         """
         if self.status != 'running':
             raise GameNotRunningException()
-        if self.result is None:
-            self.result = xo_app_stub.result(self.game_id)
         return self.result
 
     def get_win_pos(self) -> str:
         """
         Get winning sequence of squares.
 
-        # todo explain string representation
+        Win pos represented as a string.
         """
         if self.status != 'running':
             raise GameNotRunningException()
@@ -258,7 +272,7 @@ class Game:
         """
         Get full notation of moves.
 
-        # todo explain string representation
+        Moves represented as a string.
         """
         if self.status != 'running':
             raise GameNotRunningException()
