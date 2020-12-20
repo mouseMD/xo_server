@@ -304,6 +304,26 @@ class AlreadyWaiting(PlaygroundException):
         super().__init__()
 
 
+class NotIdleException(PlaygroundException):
+    def __init__(self):
+        super().__init__()
+
+
+class NotWaitingException(PlaygroundException):
+    def __init__(self):
+        super().__init__()
+
+
+class NoGameFoundException(PlaygroundException):
+    def __init__(self):
+        super().__init__()
+
+
+class NotPlayingException(PlaygroundException):
+    def __init__(self):
+        super().__init__()
+
+
 class Playground:
     """
     Class, responsible for players and games management.
@@ -334,9 +354,8 @@ class Playground:
         """
         if not self.is_registered(user_id):
             raise NotRegistered()
-        # todo replace PlaygroundException()
         if self.is_waiting(user_id) or self.is_playing(user_id):
-            raise PlaygroundException()
+            raise NotIdleException()
         self.users.pop(user_id)
 
     def is_registered(self, user_id: str) -> bool:
@@ -368,11 +387,8 @@ class Playground:
         user_id = entry.user_id
         if not self.is_registered(user_id):
             raise NotRegistered()
-        # todo replace for NotIdleException()
-        if self.is_waiting(user_id):
-            raise AlreadyWaiting()
-        if self.is_playing(user_id):
-            raise AlreadyPlaying()
+        if self.is_waiting(user_id) or self.is_playing(user_id):
+            raise NotIdleException()
         player = self.users[user_id]
         player.add_entry(entry)
         self.ready_list.add(user_id)
@@ -389,8 +405,7 @@ class Playground:
             player.remove_entry()
             self.ready_list.remove(user_id)
         else:
-            # todo replace for NotWaitingException()
-            raise PlaygroundException()
+            raise NotWaitingException()
 
     def find_match(self, user_id: str) -> Optional[str]:
         """
@@ -407,8 +422,7 @@ class Playground:
                         return uid
             return None
         else:
-            # todo replace for NotWaitingException()
-            raise PlaygroundException()
+            raise NotWaitingException()
 
     def add_game(self, uid1: str, uid2: str) -> None:
         """
@@ -430,8 +444,7 @@ class Playground:
             self.playing_list.add(uid1)
             self.playing_list.add(uid2)
         else:
-            # todo replace for NotWaitingException()
-            raise PlaygroundException()
+            raise NotWaitingException()
 
     def remove_game(self, game_id: int) -> None:
         """
@@ -449,8 +462,7 @@ class Playground:
             game.clear()
             self.games.pop(game_id)
         else:
-            # todo replace for NoGameFound()
-            raise PlaygroundException()
+            raise NoGameFoundException()
 
     def side(self, user_id: str) -> str:
         """
@@ -459,7 +471,8 @@ class Playground:
         Player must be in 'playing' state.
         If not, raises NotPlayingException()
         """
-        # todo add try block
+        if not self.is_playing(user_id):
+            raise NotPlayingException()
         return self.users[user_id].side
 
     def game_id(self, user_id: str) -> int:
@@ -469,7 +482,8 @@ class Playground:
         Player must be in 'playing' state.
         If not, raises NotPlayingException()
         """
-        # todo add try block
+        if not self.is_playing(user_id):
+            raise NotPlayingException()
         return self.users[user_id].game_id
 
     def opp_id(self, user_id: str) -> str:
@@ -479,15 +493,16 @@ class Playground:
         Player must be in 'playing' state.
         If not, raises NotPlayingException()
         """
-        # todo add try block
+        if not self.is_playing(user_id):
+            raise NotPlayingException()
         return self.users[user_id].opp_id
 
     def game(self, game_id: str) -> Game:
         """
-        Return game instance with given user id.
+        Return game instance with given game id.
 
-        Player must be in 'playing' state.
-        If not, raises NoGameFound()
+        If no game with such id, raises NoGameFoundException()
         """
-        # todo replace for NoGameFound()
+        if game_id not in self.games:
+            raise NoGameFoundException()
         return self.games[game_id]
