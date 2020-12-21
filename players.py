@@ -239,8 +239,6 @@ class Game:
         """
         if self.status != 'running':
             raise GameNotRunningException()
-        print(move.player_to_move)
-        print(self.player_to_move())
         if move.player_to_move == self.player_to_move():
             xo_app_stub.set_new_move(self.game_id, move.player_to_move, [move.square, move.vertical, move.horizontal])
         else:
