@@ -3,7 +3,7 @@ from typing import Optional, Iterable
 
 
 class Entry:
-    def __init__(self, player: Player, params: dict) -> None:
+    def __init__(self, player: 'Player', params: dict) -> None:
         self.player = player
         self.game_type = None
         self.side = None
@@ -46,7 +46,7 @@ class Player:
         self.entry = None
         self.status = "idle"
 
-    def add_game(self, game: Game) -> None:
+    def add_game(self, game: 'Game') -> None:
         """
         Move to 'playing' state with game.
         """
@@ -93,7 +93,7 @@ class Move:
         self.player_to_move = None
 
     @staticmethod
-    def create_move(sq, ver, hor, ptm):
+    def create_move(ptm, sq, ver, hor):
         m = Move()
         m.square = sq
         m.vertical = ver
@@ -158,12 +158,12 @@ class Game:
         If called when game is in 'running' state, raises GameAlreadyRunnningException().
         """
         if self.status == "idle":
+            self.status = "ready"
             self.game_type = match.game_type
             self.first_player = match.first_player
             self.second_player = match.second_player
             self.first_player.add_game(self)
             self.second_player.add_game(self)
-            self.status = "ready"
         else:
             raise GameAlreadyRunningException()
 
@@ -239,6 +239,8 @@ class Game:
         """
         if self.status != 'running':
             raise GameNotRunningException()
+        print(move.player_to_move)
+        print(self.player_to_move())
         if move.player_to_move == self.player_to_move():
             xo_app_stub.set_new_move(self.game_id, move.player_to_move, [move.square, move.vertical, move.horizontal])
         else:
@@ -433,8 +435,8 @@ class Playground:
         """
         player = self.users[user_id]
         if player.is_waiting():
+            self.ready_list.remove(player.entry)
             player.remove_entry()
-            self.ready_list.remove(user_id)
         else:
             raise NotWaitingException()
 
@@ -446,7 +448,7 @@ class Playground:
         Returns user id of the opponent or None if no match was found.
         If user is not in 'waiting' state, NotWaitingException() is raised.
         """
-        return self.matcher.match(entry.player, self.ready_list)
+        return self.matcher.match(entry, self.ready_list)
 
     def add_game(self, match: Match) -> Game:
         """
@@ -458,11 +460,11 @@ class Playground:
         player1 = match.first_player
         player2 = match.second_player
         if player1.is_waiting() and player2.is_waiting():
+            self.ready_list.remove(player1.entry)
+            self.ready_list.remove(player2.entry)
             new_game = Game()
             new_game.setup(match)
             new_game.start()
-            self.ready_list.remove(player1.entry)
-            self.ready_list.remove(player2.entry)
             return new_game
         else:
             raise NotWaitingException()

@@ -1,3 +1,3 @@
-from players import Playground
-global_playground = Playground()
+from players import Playground, Matcher
+global_playground = Playground(Matcher())
 global_sockets = {}
