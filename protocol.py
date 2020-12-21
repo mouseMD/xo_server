@@ -7,37 +7,47 @@ from players import Entry, AlreadyPlaying, Move, NotRegistered, AlreadyWaiting
 async def ready_handler(params, user_id, ws):
     logging.info("Handling 'ready' command, user_id : {}".format(user_id))
     try:
-        global_playground.add_entry(Entry.from_params(user_id, params))
+        player = global_playground.player(user_id)
+        entry = Entry(player, params)
+        global_playground.add_entry(entry)
     except AlreadyPlaying:
         await ws.send_json(await construct_error('New entry rejected, already waiting game or playing'))
     else:
         await ws.send_json(await construct_waiting())
         # check for suitable opponent
-        opp_id = global_playground.find_match(user_id)
-        if opp_id is not None:
+        match = global_playground.find_match(entry)
+        if match is not None:
             # create new game
-            global_playground.add_game(user_id, opp_id)
+            game = global_playground.add_game(match)
             # send "started" responces to both players
-            response1 = await construct_started(opp_id, global_playground.side(opp_id))
-            response2 = await construct_started(user_id, global_playground.side(user_id))
+            response1 = await construct_started(game.first_player.player_id, game.first_player.side)
+            response2 = await construct_started(game.second_player.player_id, game.second_player.side)
+            opp_id = player.opp.player_id
             await ws.send_json(response1)
             await global_sockets[opp_id].send_json(response2)
+            # send "update_state" responces to both players
+            board = game.get_board()
+            player_to_move = game.player_to_move()
+            last_move = None
+            response3 = await construct_update_state(board, player_to_move, last_move)
+            response4 = await construct_update_state(board, player_to_move, last_move)
+            await ws.send_json(response3)
+            await global_sockets[opp_id].send_json(response4)
 
 
 async def resign_handler(params, user_id, ws):
     logging.info("Handling 'resign' command, user_id : {}".format(user_id))
-    # remove active player and stop game if exists
-    # save game to db
-    game_id = global_playground.game_id(user_id)
-    game = global_playground.game(game_id)
-    game.set_result("result")
+    player = global_playground.player(user_id)
+    game = player.game
+    result = "first_win" if player.side == "second" else "second_win"
+    game.set_result(result)
     await add_game_to_db(game)
-    opp_id = global_playground.opp_id(user_id)
-    global_playground.remove_game(game_id)
-    response1 = await construct_game_over(result="loss",
+    opp_id = player.opp.player_id
+    game.clear()
+    response1 = await construct_game_over(result=result,
                                           win_pos=None,
                                           cause="resignation")
-    response2 = await construct_game_over(result="win",
+    response2 = await construct_game_over(result=result,
                                           win_pos=None,
                                           cause="resignation")
     await ws.send_json(response1)
@@ -46,17 +56,18 @@ async def resign_handler(params, user_id, ws):
 
 async def move_handler(params, user_id, ws):
     logging.info("Handling 'move' command, user_id : {}".format(user_id))
-    game_id = global_playground.game_id(user_id)
-    game = global_playground.game(game_id)
-    game.set_new_move(Move.create_move(global_playground.side(user_id),
+    player = global_playground.player(user_id)
+    game = player.game
+    game.set_new_move(Move.create_move(player.side,
                                        params['square'], params['vertical'], params['horizontal']))
+    game.update_result()
     board = game.get_board()
     player_to_move = game.player_to_move()
     last_move = params
     response1 = await construct_update_state(board, player_to_move, last_move)
     response2 = await construct_update_state(board, player_to_move, last_move)
     await ws.send_json(response1)
-    opp_id = global_playground.opp_id(user_id)
+    opp_id = player.opp.player_id
     await global_sockets[opp_id].send_json(response2)
     # check for game over by rules of board
     if game.is_finished():
@@ -68,7 +79,7 @@ async def move_handler(params, user_id, ws):
         await global_sockets[opp_id].send_json(response2)
         # save game to db
         await add_game_to_db(game)
-        global_playground.remove_game(game_id)
+        game.clear()
 
 
 async def handle_command(cmd_data, user_id, ws):
@@ -103,17 +114,17 @@ async def handle_error(user_id):
         global_playground.unregister(user_id)
     except AlreadyPlaying:
         # there is game, there is no entry
-        opp_id = global_playground.opp_id(user_id)
-        response = await construct_game_over(result="win",
+        player = global_playground.player(user_id)
+        opp_id = player.opp.player_id
+        game = player.game
+        result = "first_win" if player.side == "second" else "second_win"
+        response = await construct_game_over(result=result,
                                              win_pos=None,
                                              cause="interruption")
         await global_sockets[opp_id].send_json(response)
-        # save game to db
-        game_id = global_playground.game_id(user_id)
-        game = global_playground.game(game_id)
-        game.set_result("result")
+        game.set_result(result)
         await add_game_to_db(game)
-        global_playground.remove_game(game_id)
+        game.clear()
         global_playground.unregister(user_id)
     finally:
         global_sockets.pop(user_id)
