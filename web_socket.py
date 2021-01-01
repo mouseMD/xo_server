@@ -31,8 +31,21 @@ async def websocket_handler(request):
                 elif msg.type == WSMsgType.ERROR:
                     logging.info('connection closed with exception {} with user_id {}'.format(ws.exception(), user_id))
                     await handle_error(user_id)
+                elif msg.type == WSMsgType.BINARY:
+                    logging.info('Received BINARY type message')
+                elif msg.type == WSMsgType.CLOSE:
+                    logging.info('Received CLOSE type message')
+                elif msg.type == WSMsgType.CLOSED:
+                    logging.info('Received CLOSED type message')
+                elif msg.type == WSMsgType.CLOSING:
+                    logging.info('Received CLOSING type message')
+                elif msg.type == WSMsgType.CONTINUATION:
+                    logging.info('Received CONTINUATION type message')
+                elif msg.type == WSMsgType.PING:
+                    logging.info('Received PING type message')
+                elif msg.type == WSMsgType.PONG:
+                    logging.info('Received PONG type message')
 
             logging.info('websocket connection closed with user_id {}'.format(user_id))
-
+            await handle_error(user_id)
     return ws
-

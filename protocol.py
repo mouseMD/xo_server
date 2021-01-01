@@ -118,24 +118,25 @@ async def handle_error(user_id):
         global_playground.unregister(user_id)
     except NotRegistered:
         pass
-    except AlreadyWaiting:
-        # there is entry, there is no game
-        global_playground.remove_entry(user_id)
-        global_playground.unregister(user_id)
-    except AlreadyPlaying:
-        # there is game, there is no entry
+    except NotIdleException:
         player = global_playground.player(user_id)
-        opp_id = player.opp.player_id
-        game = player.game
-        result = "first_win" if player.side == "second" else "second_win"
-        response = await construct_game_over(result=result,
-                                             win_pos=None,
-                                             cause="interruption")
-        await global_sockets[opp_id].send_json(response)
-        game.set_result(result)
-        await add_game_to_db(game)
-        game.clear()
-        global_playground.unregister(user_id)
+        if player.is_waiting():
+            # there is entry, there is no game
+            global_playground.remove_entry(user_id)
+            global_playground.unregister(user_id)
+        elif player.is_playing():
+            # there is game, there is no entry
+            opp_id = player.opp.player_id
+            game = player.game
+            result = "first_win" if player.side == "second" else "second_win"
+            response = await construct_game_over(result=result,
+                                                 win_pos=None,
+                                                 cause="interruption")
+            await global_sockets[opp_id].send_json(response)
+            game.set_result(result)
+            await add_game_to_db(game)
+            game.clear()
+            global_playground.unregister(user_id)
     finally:
         global_sockets.pop(user_id)
 
