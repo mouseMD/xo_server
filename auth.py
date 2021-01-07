@@ -1,3 +1,4 @@
+import time
 from aiohttp_security.abc import AbstractAuthorizationPolicy
 
 
@@ -9,10 +10,5 @@ class MyAuthorizationPolicy(AbstractAuthorizationPolicy):
         return True
 
 
-_global_user_counter = 0
-
-
 def get_new_anonymous_user_id():
-    global _global_user_counter
-    _global_user_counter += 1
-    return _global_user_counter
+    return time.time()
