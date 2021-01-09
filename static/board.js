@@ -44,12 +44,14 @@ pic_O.src = 'static/O.png'
 
 function get_matrix(index, board_data)
 {
-    return [
-  [1, 0, 2, 2],
-  [2, 0, 1, 1],
-  [0, 1, 2, 0],
-  [0, 0, 1, 0]
-];
+    // board_data - text string with board position
+    // index - square index
+    square_string = board_data.substring(16*index, 16*(index+1))
+    square_pos = [[],[],[],[]];
+    for(var i = 0; i < 16; i++) {
+        square_pos[i%4][Math.floor(i/4)] = square_string[i].charCodeAt(0);
+    }
+    return square_pos
 }
 
 class BigSquare{
@@ -76,6 +78,7 @@ constructor(start_x, start_y, size, frame_margin_1, frame_margin_2, square_count
 }
 
 draw(ar) {
+    document.getElementById("debug").value += ar;
     ctx.strokeRect(this.frame_1_start_x, this.frame_1_start_y, this.frame_1_size_x, this.frame_1_size_y);
     ctx.strokeRect(this.frame_2_start_x, this.frame_2_start_y, this.frame_2_size_x, this.frame_2_size_y);
     ctx.fillStyle = this.color; // меняем цвет клеток
