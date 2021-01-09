@@ -150,6 +150,7 @@ class Game:
         self.status = "idle"
         self.game_type = None
         self.result = 'none'
+        self.can_accept = None
 
     def setup(self, match: Match) -> None:
         """
@@ -195,6 +196,7 @@ class Game:
         self.second_player = None
         self.status = "idle"
         self.game_type = None
+        self.can_accept = None
 
     def first(self) -> Player:
         """
@@ -241,6 +243,7 @@ class Game:
             raise GameNotRunningException()
         if move.player_to_move == self.player_to_move():
             xo_app_stub.set_new_move(self.game_id, move.player_to_move, [move.square, move.vertical, move.horizontal])
+            self.can_accept = None
         else:
             raise WrongPlayerException()
 
@@ -311,6 +314,9 @@ class Game:
         if self.status != 'running':
             raise GameNotRunningException()
         return xo_app_stub.get_moves(self.game_id)
+
+    def set_draw_offer(self, player) -> None:
+        self.can_accept = player
 
 
 class PlaygroundException(Exception):

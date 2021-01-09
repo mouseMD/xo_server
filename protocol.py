@@ -92,6 +92,41 @@ async def move_handler(params, user_id, ws):
         await ws.send_json(await construct_error('New move rejected, no current game'))
 
 
+async def offer_handler(params, user_id, ws):
+    logging.info("Handling 'offer' command, user_id : {}".format(user_id))
+    player = global_playground.player(user_id)
+    if player.is_playing():
+        game = player.game
+        game.set_draw_offer(player.opp)
+        responce = await construct_offered()
+        opp_id = player.opp.player_id
+        await global_sockets[opp_id].send_json(responce)
+    else:
+        await ws.send_json(await construct_error('Draw offer rejected, no current game'))
+
+
+async def accept_hadler(params, user_id, ws):
+    logging.info("Handling 'accept' command, user_id : {}".format(user_id))
+    player = global_playground.player(user_id)
+    if player.is_playing():
+        game = player.game
+        if game.can_accept is player:
+            # fix the draw
+            game.set_result('draw')
+            response1 = await construct_game_over('draw', None, "agreement")
+            response2 = await construct_game_over('draw', None, "agreement")
+            await ws.send_json(response1)
+            opp_id = player.opp.player_id
+            await global_sockets[opp_id].send_json(response2)
+            # save game to db
+            await add_game_to_db(game)
+            game.clear()
+        else:
+            await ws.send_json(await construct_error('Cannot accept, no offer'))
+    else:
+        await ws.send_json(await construct_error('Draw accept rejected, no current game'))
+
+
 async def handle_command(cmd_data, user_id, ws):
     if cmd_data["version"] == "v1":
         command = cmd_data["command"]
@@ -101,7 +136,8 @@ async def handle_command(cmd_data, user_id, ws):
             'ready': ready_handler,
             'resign': resign_handler,
             'move': move_handler,
-            #'offer': offer_handler
+            'offer': offer_handler,
+            'accept': accept_hadler
         }
 
         if command in command_handlers:
