@@ -49,7 +49,7 @@ function get_matrix(index, board_data)
     square_string = board_data.substring(16*index, 16*(index+1))
     square_pos = [[],[],[],[]];
     for(var i = 0; i < 16; i++) {
-        square_pos[i%4][Math.floor(i/4)] = square_string[i].charCodeAt(0);
+        square_pos[Math.floor(i/4)][i%4] = square_string[i].charCodeAt(0);
     }
     return square_pos
 }
@@ -86,10 +86,10 @@ draw(ar) {
     for (let i = 0; i < this.square_count_x; i += 1)
         for (let j = 0; j < this.square_count_y; j += 1) {
             ctx.fillRect(this.start_x + i * this.size, this.start_y + j * this.size, this.size-1, this.size-1);
-            if (ar[i][j] == 1) {
+            if (ar[i][j] == 0) {
                 ctx.drawImage(pic_X, this.start_x + i * this.size, this.start_y + j * this.size);
             }
-            else if (ar[i][j] == 2) {
+            else if (ar[i][j] == 1) {
                  ctx.drawImage(pic_O, this.start_x + i * this.size, this.start_y + j * this.size);
             }
         }
@@ -212,6 +212,7 @@ function update_state(board, player_to_move, last_move)
     {
         myMove = firstPlayer;
     }
+    enabled = myMove;
     square1.draw(get_matrix(0, board));
     square2.draw(get_matrix(1, board));
     square3.draw(get_matrix(2, board));
