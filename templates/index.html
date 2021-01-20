@@ -8,12 +8,9 @@
 </head>
 <body>
     <div id="header">
-        <H1>My super XO game</H1>
+        {% include 'header.html' %}
     </div>
     <div id="content">
-        <a href="/wait_game">
-            Play new game
-        </a>
         <textarea id="debug" rows="10" cols="80" name="text"></textarea>
 {% if variable %}
 	<p>Variable is set and equals {{ variable }}.</p>
@@ -22,6 +19,7 @@
 {% endif %}
 	</div>
     <div id="footer">
+        {% include 'footer.html' %}
     </div>
 </body>
 </html>

@@ -90,7 +90,7 @@ function handle_game_over(cm_data)
 
 socket.onopen = function(e)
 {
-    alert("[open] Connection established");
+    document.getElementById("debug").value += "[open] Connection established" ;
 };
 
 socket.onmessage = function(e)
@@ -116,7 +116,7 @@ socket.onmessage = function(e)
     }
     else
     {
-        alert(`Wrong protocol version ${cmd_data.version} !`);
+        document.getElementById("debug").value += `Wrong protocol version ${cmd_data.version} !` ;
     }
 };
 
@@ -124,15 +124,15 @@ socket.onclose = function(e)
 {
     if (e.wasClean)
     {
-        alert(`[close] Connection closed clean, code=${e.code} reason=${e.reason}`);
+        document.getElementById("debug").value += `[close] Connection closed clean, code=${e.code} reason=${e.reason}` ;
     }
     else
     {
-        alert('[close] Connection interrupted');
+        document.getElementById("debug").value += '[close] Connection interrupted';
     }
 };
 
 socket.onerror = function(e)
 {
-    alert(`[error] ${e.message}`);
+    document.getElementById("debug").value += `[error] ${e.message}`;
 };

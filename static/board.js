@@ -1,7 +1,5 @@
 var example = document.getElementById("example"),
 ctx = example.getContext('2d');
-example.width  = 640;
-example.height = 480;
 
 let size = 32
 let frame_margin_1 = 2
