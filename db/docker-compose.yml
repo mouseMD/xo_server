@@ -1,0 +1,22 @@
+version: '3.1'
+
+services:
+
+  db_test:
+    image: postgres
+    restart: always
+    ports: 
+      - "5432:5432"
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: user
+      POSTGRES_USER: user
+      POSTGRES_DB: xo_db
+  pg_admin:
+    image: dpage/pgadmin4
+    ports: 
+       - "8081:80"
+    environment:            
+      PGADMIN_DEFAULT_EMAIL: user@domain.com
+      PGADMIN_DEFAULT_PASSWORD: SuperSecret
