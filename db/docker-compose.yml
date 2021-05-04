@@ -4,6 +4,7 @@ services:
 
   db_test:
     image: postgres
+    container_name: xo_db
     restart: always
     ports: 
       - "5432:5432"
@@ -13,10 +14,3 @@ services:
       POSTGRES_PASSWORD: user
       POSTGRES_USER: user
       POSTGRES_DB: xo_db
-  pg_admin:
-    image: dpage/pgadmin4
-    ports: 
-       - "8081:80"
-    environment:            
-      PGADMIN_DEFAULT_EMAIL: user@domain.com
-      PGADMIN_DEFAULT_PASSWORD: SuperSecret
