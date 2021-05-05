@@ -9,6 +9,22 @@ from routes import setup_routes, setup_static_routes
 from settings import BASE_DIR
 from auth import MyAuthorizationPolicy
 import logging
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
+
+
+async def create_connection(app):
+    DB_URL = "postgresql+asyncpg://user:user@localhost/xo_db"
+    engine = create_async_engine(DB_URL, echo=True)
+    app['db'] = engine
+    async_session = sessionmaker(
+        engine, expire_on_commit=False, class_=AsyncSession
+    )
+    app['session'] = async_session()
+
+
+async def delete_connection(app):
+    await app['session'].close()
 
 
 if __name__ == "__main__":
@@ -23,4 +39,6 @@ if __name__ == "__main__":
     setup_routes(app)
     setup_static_routes(app)
     setup_security(app, SessionIdentityPolicy(), MyAuthorizationPolicy())
+    app.on_startup.append(create_connection)
+    app.on_cleanup.append(delete_connection)
     web.run_app(app)
