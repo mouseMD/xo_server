@@ -33,3 +33,9 @@ async def wait_game(request):
     user_id = await authorized_userid(request)
     return {'user': user_id}
 
+
+async def add_new_user(request):
+    """
+    Register a new user.
+    """
+    pass
