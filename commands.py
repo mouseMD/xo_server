@@ -78,77 +78,77 @@ class Command(ABC):
     """
     Incapsulates game protocol commands
     """
-    def __init__(self, **parameters):
-        pass
+    def __init__(self, user_id, **parameters):
+        self.user_id = user_id
 
 
 class WaitingCommand(Command):
-    def __init__(self, **parameters):
-        super().__init__()
+    def __init__(self, user_id, **parameters):
+        super().__init__(user_id)
 
 
 class ErrorCommand(Command):
-    def __init__(self, **parameters):
-        super().__init__()
+    def __init__(self, user_id, **parameters):
+        super().__init__(user_id)
         self.message = parameters["msg"]
 
 
 class StartedCommand(Command):
-    def __init__(self, **parameters):
-        super().__init__()
+    def __init__(self, user_id, **parameters):
+        super().__init__(user_id)
         self.opponent = parameters["opp_id"]
         self.ptype = parameters["ptype"]
 
 
 class UpdateStateCommand(Command):
-    def __init__(self, **parameters):
-        super().__init__()
+    def __init__(self, user_id, **parameters):
+        super().__init__(user_id)
         self.board = parameters["board"]
         self.p_t_m = parameters["player_to_move"]
         self.last_move = parameters["last_move"]
 
 
 class OfferedCommand(Command):
-    def __init__(self, **parameters):
-        super().__init__()
+    def __init__(self, user_id, **parameters):
+        super().__init__(user_id)
 
 
 class GameOverCommand(Command):
-    def __init__(self, **parameters):
-        super().__init__()
+    def __init__(self, user_id, **parameters):
+        super().__init__(user_id)
         self.result = parameters["result"]
         self.win_pos = parameters["win_pos"]
         self.cause = parameters["cause"]
 
 
 class ReadyCommand(Command):
-    def __init__(self, **parameters):
-        super().__init__()
+    def __init__(self, user_id, **parameters):
+        super().__init__(user_id)
         self.type = parameters["type"]
         self.opponent = parameters["oppponent"]
 
 
 class ResignCommand(Command):
-    def __init__(self, **parameters):
-        super().__init__()
+    def __init__(self, user_id, **parameters):
+        super().__init__(user_id)
 
 
 class MoveCommand(Command):
-    def __init__(self, **parameters):
-        super().__init__()
+    def __init__(self, user_id, **parameters):
+        super().__init__(user_id)
         self.square = parameters["square"]
         self.vertical = parameters["vertical"]
         self.horizontal = parameters["horizontal"]
 
 
 class OfferCommand(Command):
-    def __init__(self, **parameters):
-        super().__init__()
+    def __init__(self, user_id, **parameters):
+        super().__init__(user_id)
 
 
 class AcceptCommand(Command):
-    def __init__(self, **parameters):
-        super().__init__()
+    def __init__(self, user_id, **parameters):
+        super().__init__(user_id)
 
 
 class CommandFactory(ABC):
@@ -167,7 +167,7 @@ class CommandFactory(ABC):
     }
 
     @staticmethod
-    def from_data(data: Dict) -> 'Command':
+    def from_data(user_id, data: Dict) -> 'Command':
         if data["version"] == "v1":
             command_type = data["command"]
             parameters = data["parameters"]
@@ -175,4 +175,4 @@ class CommandFactory(ABC):
             raise CommandException(f"Wrong protocol version {data['version']}!")
         if command_type not in _commands:
             raise CommandException(f"Unknown command {command_type} found!")
-        return _commands[command_type](parameters)
+        return _commands[command_type](user_id, parameters)

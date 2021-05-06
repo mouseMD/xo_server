@@ -179,15 +179,10 @@ async def handle_error(user_id):
         global_sockets.pop(user_id)
 
 
-async def handle_command_new(cmd_data: Dict, user_id: int, ws):
+async def handle_command_new(cmd_data: Dict, user_id, ws):
     """
-
-    :param cmd_data:
-    :param user_id:
-    :param ws:
-    :return:
     """
-    result_commands = await execute_logic(CommandFactory.from_data(cmd_data))
+    result_commands = await execute_logic(CommandFactory.from_data(user_id, cmd_data))
     for command in result_commands:
         await send_command(command)
 
