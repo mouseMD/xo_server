@@ -78,7 +78,7 @@ class Command(ABC):
     """
     Incapsulates game protocol commands
     """
-    def __init__(self, user_id, **parameters):
+    def __init__(self, user_id):
         self.user_id = user_id
 
     @abstractmethod
@@ -86,25 +86,52 @@ class Command(ABC):
         pass
 
 
-class WaitingCommand(Command):
+class InCommand(Command):
+    """
+    Input commands (from user to server)
+    """
+    def __init__(self, user_id):
+        super().__init__(user_id)
+        self.direction = "in"
+
+    @abstractmethod
+    def data(self):
+        pass
+
+
+class OutCommand(Command):
+    """
+    Input commands (from user to server)
+    """
+
+    def __init__(self, user_id):
+        super().__init__(user_id)
+        self.direction = "out"
+
+    @abstractmethod
+    def data(self):
+        pass
+
+
+class WaitingCommand(OutCommand):
     def __init__(self, user_id, **parameters):
         super().__init__(user_id)
 
 
-class ErrorCommand(Command):
+class ErrorCommand(OutCommand):
     def __init__(self, user_id, **parameters):
         super().__init__(user_id)
         self.message = parameters["msg"]
 
 
-class StartedCommand(Command):
+class StartedCommand(OutCommand):
     def __init__(self, user_id, **parameters):
         super().__init__(user_id)
         self.opponent = parameters["opp_id"]
         self.ptype = parameters["ptype"]
 
 
-class UpdateStateCommand(Command):
+class UpdateStateCommand(OutCommand):
     def __init__(self, user_id, **parameters):
         super().__init__(user_id)
         self.board = parameters["board"]
@@ -112,12 +139,12 @@ class UpdateStateCommand(Command):
         self.last_move = parameters["last_move"]
 
 
-class OfferedCommand(Command):
+class OfferedCommand(OutCommand):
     def __init__(self, user_id, **parameters):
         super().__init__(user_id)
 
 
-class GameOverCommand(Command):
+class GameOverCommand(OutCommand):
     def __init__(self, user_id, **parameters):
         super().__init__(user_id)
         self.result = parameters["result"]
@@ -125,19 +152,19 @@ class GameOverCommand(Command):
         self.cause = parameters["cause"]
 
 
-class ReadyCommand(Command):
+class ReadyCommand(InCommand):
     def __init__(self, user_id, **parameters):
         super().__init__(user_id)
         self.type = parameters["type"]
         self.opponent = parameters["oppponent"]
 
 
-class ResignCommand(Command):
+class ResignCommand(InCommand):
     def __init__(self, user_id, **parameters):
         super().__init__(user_id)
 
 
-class MoveCommand(Command):
+class MoveCommand(InCommand):
     def __init__(self, user_id, **parameters):
         super().__init__(user_id)
         self.square = parameters["square"]
@@ -145,12 +172,12 @@ class MoveCommand(Command):
         self.horizontal = parameters["horizontal"]
 
 
-class OfferCommand(Command):
+class OfferCommand(InCommand):
     def __init__(self, user_id, **parameters):
         super().__init__(user_id)
 
 
-class AcceptCommand(Command):
+class AcceptCommand(InCommand):
     def __init__(self, user_id, **parameters):
         super().__init__(user_id)
 
