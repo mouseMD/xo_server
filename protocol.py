@@ -1,6 +1,6 @@
 from db import add_game_to_db
 import logging
-from global_defs import global_sockets, global_playground
+from global_defs import global_sockets, global_playground, registry
 from players import Entry, AlreadyPlaying, Move, NotRegistered, AlreadyWaiting, NotIdleException, WrongPlayerException
 from commands import *
 from typing import Dict, List, Optional
@@ -198,8 +198,6 @@ async def execute_logic(cmd: Command) -> List[Optional[Command]]:
 
 async def send_command(cmd: Command) -> None:
     """
-
-    :param cmd:
-    :return:
     """
-    pass
+    ws = registry.get_socket(cmd.user_id)
+    ws.send_json(cmd.data())

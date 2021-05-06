@@ -1,5 +1,5 @@
 from typing import Dict
-from abc import ABC
+from abc import ABC, abstractmethod
 
 
 async def construct_waiting():
@@ -80,6 +80,10 @@ class Command(ABC):
     """
     def __init__(self, user_id, **parameters):
         self.user_id = user_id
+
+    @abstractmethod
+    def data(self):
+        pass
 
 
 class WaitingCommand(Command):

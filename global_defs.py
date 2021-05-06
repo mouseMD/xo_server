@@ -17,3 +17,6 @@ class SocketRegistry:
 
     def remove_socket(self, user_id):
         self.sockets.pop(user_id, None)
+
+
+registry = SocketRegistry()
