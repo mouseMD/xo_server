@@ -1,3 +1,7 @@
+from typing import Dict
+from abc import ABC
+
+
 async def construct_waiting():
     data = {
         'version': 'v1',
@@ -66,10 +70,109 @@ async def construct_game_over(result, win_pos, cause):
     return data
 
 
-class Command:
-    def __init__(self):
+class CommandException(Exception):
+    pass
+
+
+class Command(ABC):
+    """
+    Incapsulates game protocol commands
+    """
+    def __init__(self, **parameters):
         pass
 
+
+class WaitingCommand(Command):
+    def __init__(self, **parameters):
+        super().__init__()
+
+
+class ErrorCommand(Command):
+    def __init__(self, **parameters):
+        super().__init__()
+        self.message = parameters["msg"]
+
+
+class StartedCommand(Command):
+    def __init__(self, **parameters):
+        super().__init__()
+        self.opponent = parameters["opp_id"]
+        self.ptype = parameters["ptype"]
+
+
+class UpdateStateCommand(Command):
+    def __init__(self, **parameters):
+        super().__init__()
+        self.board = parameters["board"]
+        self.p_t_m = parameters["player_to_move"]
+        self.last_move = parameters["last_move"]
+
+
+class OfferedCommand(Command):
+    def __init__(self, **parameters):
+        super().__init__()
+
+
+class GameOverCommand(Command):
+    def __init__(self, **parameters):
+        super().__init__()
+        self.result = parameters["result"]
+        self.win_pos = parameters["win_pos"]
+        self.cause = parameters["cause"]
+
+
+class ReadyCommand(Command):
+    def __init__(self, **parameters):
+        super().__init__()
+        self.type = parameters["type"]
+        self.opponent = parameters["oppponent"]
+
+
+class ResignCommand(Command):
+    def __init__(self, **parameters):
+        super().__init__()
+
+
+class MoveCommand(Command):
+    def __init__(self, **parameters):
+        super().__init__()
+        self.square = parameters["square"]
+        self.vertical = parameters["vertical"]
+        self.horizontal = parameters["horizontal"]
+
+
+class OfferCommand(Command):
+    def __init__(self, **parameters):
+        super().__init__()
+
+
+class AcceptCommand(Command):
+    def __init__(self, **parameters):
+        super().__init__()
+
+
+class CommandFactory(ABC):
+    _commands = {
+            "waiting": WaitingCommand,
+            "error": ErrorCommand,
+            "started": StartedCommand,
+            "update_state": UpdateStateCommand,
+            "offered": OfferCommand,
+            "game_over": GameOverCommand,
+            "ready": ReadyCommand,
+            "resign": ResignCommand,
+            "move": MoveCommand,
+            "offer": OfferCommand,
+            "accept": AcceptCommand,
+    }
+
     @staticmethod
-    def from_data(self):
-        return Command()
+    def from_data(data: Dict) -> 'Command':
+        if data["version"] == "v1":
+            command_type = data["command"]
+            parameters = data["parameters"]
+        else:
+            raise CommandException(f"Wrong protocol version {data['version']}!")
+        if command_type not in _commands:
+            raise CommandException(f"Unknown command {command_type} found!")
+        return _commands[command_type](parameters)

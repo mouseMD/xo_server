@@ -187,7 +187,7 @@ async def handle_command_new(cmd_data: Dict, user_id: int, ws):
     :param ws:
     :return:
     """
-    result_commands = await execute_logic(Command.from_data(cmd_data))
+    result_commands = await execute_logic(CommandFactory.from_data(cmd_data))
     for command in result_commands:
         await send_command(command)
 
