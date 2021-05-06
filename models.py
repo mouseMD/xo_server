@@ -4,6 +4,10 @@ from sqlalchemy import Integer, String, Boolean, Column
 Base = declarative_base()
 
 
+class UserException(Exception):
+    pass
+
+
 class User(Base):
     """The User model."""
     __tablename__ = 'users'
@@ -16,3 +20,7 @@ class User(Base):
     deleted = Column(Boolean, default=False)
 
     __mapper_args__ = {"eager_defaults": True}
+
+    @staticmethod
+    def create_new(login: str, password: str):
+        raise UserException(f'User {login} already exists!')
