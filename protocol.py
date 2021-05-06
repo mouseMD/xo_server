@@ -3,6 +3,7 @@ import logging
 from global_defs import global_sockets, global_playground
 from players import Entry, AlreadyPlaying, Move, NotRegistered, AlreadyWaiting, NotIdleException, WrongPlayerException
 from commands import *
+from typing import Dict, List, Optional
 
 
 async def ready_handler(params, user_id, ws):
@@ -176,3 +177,34 @@ async def handle_error(user_id):
             global_playground.unregister(user_id)
     finally:
         global_sockets.pop(user_id)
+
+
+async def handle_command_new(cmd_data: Dict, user_id: int, ws):
+    """
+
+    :param cmd_data:
+    :param user_id:
+    :param ws:
+    :return:
+    """
+    result_commands = await execute_logic(Command.from_data(cmd_data))
+    for command in result_commands:
+        await send_command(command)
+
+
+async def execute_logic(cmd: Command) -> List[Optional[Command]]:
+    """
+
+    :param cmd:
+    :return:
+    """
+    return []
+
+
+async def send_command(cmd: Command) -> None:
+    """
+
+    :param cmd:
+    :return:
+    """
+    pass

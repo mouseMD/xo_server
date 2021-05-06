@@ -64,3 +64,12 @@ async def construct_game_over(result, win_pos, cause):
         }
     }
     return data
+
+
+class Command:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def from_data(self):
+        return Command()
