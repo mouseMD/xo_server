@@ -45,13 +45,12 @@ async def add_new_user(request):
     password = data['password']
 
     # create new user in database
-    try:
-        user = User.create_new(login, password)
-        session = request.app.session
-        async with session.begin():
-            session.add(user)
-    except UserException:
-        raise web.HTTPBadRequest()
+    user = User.create_new(login, password)
+    session = request.app.session
+    async with session.begin():
+        if User.query.filter_by(login=login).first() is not None:
+            raise web.HTTPBadRequest(text="User already exists")
+        session.add(user)
 
     # create new identity for current user
     redirect_response = web.HTTPFound(request.rel_url)

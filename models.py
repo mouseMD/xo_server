@@ -1,6 +1,7 @@
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import Integer, String, Boolean, Column
 from utils import current_timestamp
+from passlib.hash import sha256_crypt
 
 Base = declarative_base()
 
@@ -24,4 +25,7 @@ class User(Base):
 
     @staticmethod
     def create_new(login: str, password: str):
-        raise UserException(f'User {login} already exists!')
+        user = User()
+        user.login = login
+        user.password_hash = sha256_crypt.hash(password)
+        return user
