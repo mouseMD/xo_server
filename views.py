@@ -26,7 +26,8 @@ def auto_new_user(handler):
 @auto_new_user
 async def index(request):
     user_id = await authorized_userid(request)
-    return {'variable': user_id}
+    authorized = (user_id is not None)
+    return {'variable': user_id, 'auth': authorized}
 
 
 @aiohttp_jinja2.template('wait_game.html')
@@ -54,7 +55,7 @@ async def add_new_user(request):
     except IntegrityError:
         raise web.HTTPBadRequest(text='User already exists!')
     # create new identity for current user
-    redirect_response = web.HTTPFound(request.rel_url)
+    redirect_response = web.HTTPFound('/')
     identity = 'auth_' + login
     await remember(request, redirect_response, identity)
 

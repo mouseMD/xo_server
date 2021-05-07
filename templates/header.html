@@ -4,8 +4,13 @@
   <a class="active" href="/">Home</a>
   <a href="/wait_game">Play</a>
   <a href="/history">History</a>
-  <button class="login-button" id="login-button" onclick="openLoginForm()">Login</button>
-  {% include 'login_form.html' %}
-  <button class="register-button" id="register-button" onclick="openRegisterForm()">Register</button>
-  {% include 'register_form.html' %}
+  {% if not auth %}
+    <button class="login-button" id="login-button" onclick="openLoginForm()">Login</button>
+    {% include 'login_form.html' %}
+    <button class="register-button" id="register-button" onclick="openRegisterForm()">Register</button>
+    {% include 'register_form.html' %}
+  {% else %}
+    <a class="user" href="#">Hello, {{ variable }}.</a>
+  {% endif %}
+
 </div>

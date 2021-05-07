@@ -16,6 +16,10 @@
   text-align: center; /* If you want the text to be centered */
 }
 
+.navbar .user {
+  float: right;
+}
+
 .navbar button {
     float: right;
 }
