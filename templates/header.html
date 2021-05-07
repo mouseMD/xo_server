@@ -5,13 +5,13 @@
   <a href="/wait_game">Play</a>
   <a href="/history">History</a>
   {% if not auth %}
-    <button class="login-button" id="login-button" onclick="openLoginForm()">Login</button>
+    <button class="navbar-button" id="login-button" onclick="openLoginForm()">Login</button>
     {% include 'login_form.html' %}
-    <button class="register-button" id="register-button" onclick="openRegisterForm()">Register</button>
+    <button class="navbar-button" id="register-button" onclick="openRegisterForm()">Register</button>
     {% include 'register_form.html' %}
   {% else %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <button class="logout-button" id="logout-button" onclick="logout()">
+    <button class="navbar-button" id="logout-button" onclick="logout()">
       Logout <i class="fa fa-sign-out"></i>
     </button>
     <a class="user" href="#">Hello, {{ variable }}.</a>
