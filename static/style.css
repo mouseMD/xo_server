@@ -71,6 +71,15 @@ canvas {
   opacity: 0.8;
 }
 
+.logout-button {
+  background-color: #555;
+  color: white;
+  padding: 16px 20px;
+  border: none;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
 /* The popup form - hidden by default */
 .form-popup {
   display: none;
@@ -121,7 +130,7 @@ canvas {
 }
 
 /* Add some hover effects to buttons */
-.form-container .btn:hover, .login-button:hover, .register-button:hover {
+.form-container .btn:hover, .login-button:hover, .register-button:hover, .logout-button:hover{
   opacity: 1;
 }
 
