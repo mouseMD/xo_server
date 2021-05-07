@@ -124,3 +124,11 @@ canvas {
 .form-container .btn:hover, .login-button:hover, .register-button:hover {
   opacity: 1;
 }
+
+#footer {
+    position: fixed;
+    bottom: 0;
+    margin-bottom:10px;
+    text-align: center;
+    width: 100%;
+}
