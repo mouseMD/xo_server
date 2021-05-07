@@ -4,6 +4,7 @@ from aiohttp_security import is_anonymous, remember, authorized_userid
 from auth import get_new_anonymous_user_id
 from functools import wraps
 from models import User, UserException
+from sqlalchemy.exc import IntegrityError
 
 
 # decorator to autocreate temporary user ids for not autheticated usera
@@ -46,12 +47,12 @@ async def add_new_user(request):
 
     # create new user in database
     user = User.create_new(login, password)
-    session = request.app.session
-    async with session.begin():
-        if User.query.filter_by(login=login).first() is not None:
-            raise web.HTTPBadRequest(text="User already exists")
-        session.add(user)
-
+    session = request.app['session']
+    try:
+        async with session.begin():
+            session.add(user)
+    except IntegrityError:
+        raise web.HTTPBadRequest(text='User already exists!')
     # create new identity for current user
     redirect_response = web.HTTPFound(request.rel_url)
     identity = 'auth_' + login
