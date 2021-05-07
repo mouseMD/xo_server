@@ -1,0 +1,1 @@
+curl -X POST -F 'login=user1' -F 'password=user1' localhost:8080/users
