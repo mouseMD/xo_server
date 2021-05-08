@@ -77,7 +77,7 @@ async def login_user(request):
     session = request.app['session']
     stmt = select(User).where(User.login == login)
     result = await session.execute(stmt)
-    user = result.scalars()[0]
+    user = result.scalars().all()[0]
 
     if user and user.check_password(password):
         # create new identity
@@ -92,7 +92,7 @@ async def login_user(request):
 
 async def logout_user(request):
     identity = "Anon_" + str(get_new_anonymous_user_id())
-    redirect_response = web.HTTPFound(request.rel_url)
+    redirect_response = web.HTTPFound('/')
     await remember(request, redirect_response, identity)
     raise redirect_response
 
