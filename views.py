@@ -5,6 +5,7 @@ from auth import get_new_anonymous_user_id
 from functools import wraps
 from models import User, UserException
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select
 
 
 # decorator to autocreate temporary user ids for not autheticated usera
@@ -61,3 +62,37 @@ async def add_new_user(request):
 
     # redirect to main page
     return redirect_response
+
+
+async def login_user(request):
+    """
+    Login user.
+    """
+    # get user credentials
+    data = await request.post()
+    login = data['login']
+    password = data['password']
+
+    # here we have an old identity, we will change it to new if login successful
+    session = request.app['session']
+    stmt = select(User).where(User.login == login)
+    result = await session.execute(stmt)
+    user = result.scalars()[0]
+
+    if user and user.check_password(password):
+        # create new identity
+        identity = 'auth_' + login
+        redirect_response = web.HTTPFound('/')
+        await remember(request, redirect_response, identity)
+    else:
+        # redirect back
+        redirect_response = web.HTTPFound(request.rel_url)
+    return redirect_response
+
+
+async def logout_user(request):
+    identity = "Anon_" + str(get_new_anonymous_user_id())
+    redirect_response = web.HTTPFound(request.rel_url)
+    await remember(request, redirect_response, identity)
+    raise redirect_response
+

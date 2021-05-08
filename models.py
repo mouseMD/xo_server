@@ -29,3 +29,6 @@ class User(Base):
         user.login = login
         user.password_hash = sha256_crypt.hash(password)
         return user
+
+    def check_password(self, password: str):
+        return sha256_crypt.verify(password, self.password_hash)
