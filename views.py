@@ -32,10 +32,11 @@ async def index(request):
 
 
 @aiohttp_jinja2.template('wait_game.html')
-@auto_new_user
 async def wait_game(request):
     user_id = await authorized_userid(request)
-    return {'user': user_id}
+    if user_id is None:
+        raise web.HTTPForbidden()
+    return {'user': user_id, 'variable': user_id, 'auth': True}
 
 
 async def add_new_user(request):
