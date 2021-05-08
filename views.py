@@ -77,7 +77,8 @@ async def login_user(request):
     # here we have an old identity, we will change it to new if login successful
     session = request.app['session']
     stmt = select(User).where(User.login == login)
-    result = await session.execute(stmt)
+    async with session.begin():
+        result = await session.execute(stmt)
     users = result.scalars().all()
     if users and users[0].check_password(password):
         # create new identity
