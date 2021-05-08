@@ -77,16 +77,15 @@ async def login_user(request):
     session = request.app['session']
     stmt = select(User).where(User.login == login)
     result = await session.execute(stmt)
-    user = result.scalars().all()[0]
-
-    if user and user.check_password(password):
+    users = result.scalars().all()
+    if users and users[0].check_password(password):
         # create new identity
         identity = 'auth_' + login
         redirect_response = web.HTTPFound('/')
         await remember(request, redirect_response, identity)
     else:
         # redirect back
-        redirect_response = web.HTTPFound(request.rel_url)
+        redirect_response = web.HTTPFound('/')
     return redirect_response
 
 
