@@ -6,6 +6,7 @@ from functools import wraps
 from models import User, UserException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
+from datetime import datetime
 
 
 # decorator to autocreate temporary user ids for not autheticated usera
@@ -97,3 +98,16 @@ async def logout_user(request):
     await remember(request, redirect_response, identity)
     raise redirect_response
 
+
+async def get_active_users(request):
+    """
+    Get list of active users
+    """
+    session = request.app['session']
+    stmt = select(User).where(User.online == True)
+    async with session.begin():
+        result = await session.execute(stmt)
+    users = result.scalars().all()
+    data = [{"login": user.login, "created_at": datetime.fromtimestamp(user.created_at).strftime('%Y-%m-%d %H:%M:%S')}
+            for user in users]
+    return web.json_response(data)
