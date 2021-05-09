@@ -1,5 +1,5 @@
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import Integer, String, Boolean, Column
+from sqlalchemy import Integer, String, Boolean, Column, ForeignKey, JSON
 from utils import current_timestamp
 from passlib.hash import sha256_crypt
 
@@ -32,3 +32,19 @@ class User(Base):
 
     def check_password(self, password: str):
         return sha256_crypt.verify(password, self.password_hash)
+
+
+class EntryException(Exception):
+    pass
+
+
+class Entry(Base):
+    """The Entry model."""
+    __tablename__ = 'entries'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    created_at = Column(Integer, default=current_timestamp)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    active = Column(Boolean, default=True)
+    criteria = Column(JSON)
+
+    __mapper_args__ = {"eager_defaults": True}
