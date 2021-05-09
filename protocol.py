@@ -1,6 +1,6 @@
 from db import add_game_to_db
 import logging
-from global_defs import global_sockets, global_playground, registry
+from global_defs import global_playground, registry
 from players import Entry, AlreadyPlaying, Move, NotRegistered, AlreadyWaiting, NotIdleException, WrongPlayerException
 from commands import *
 from typing import Dict, List, Optional
@@ -26,7 +26,7 @@ async def ready_handler(params, user_id, ws):
             response1 = await construct_started(opp_id, player.side)
             response2 = await construct_started(user_id, player.opp.side)
             await ws.send_json(response1)
-            await global_sockets[opp_id].send_json(response2)
+            await registry.get_socket(opp_id).send_json(response2)
             # send "update_state" responces to both players
             board = game.get_board()
             player_to_move = game.player_to_move()
@@ -34,7 +34,7 @@ async def ready_handler(params, user_id, ws):
             response3 = await construct_update_state(board, player_to_move, last_move)
             response4 = await construct_update_state(board, player_to_move, last_move)
             await ws.send_json(response3)
-            await global_sockets[opp_id].send_json(response4)
+            await registry.get_socket(opp_id).send_json(response4)
 
 
 async def resign_handler(params, user_id, ws):
@@ -54,7 +54,7 @@ async def resign_handler(params, user_id, ws):
                                               win_pos=None,
                                               cause="resignation")
         await ws.send_json(response1)
-        await global_sockets[opp_id].send_json(response2)
+        await registry.get_socket(opp_id).send_json(response2)
     else:
         await ws.send_json(await construct_error('Resign rejected, no current game'))
 
@@ -78,7 +78,7 @@ async def move_handler(params, user_id, ws):
             response2 = await construct_update_state(board, player_to_move, last_move)
             await ws.send_json(response1)
             opp_id = player.opp.player_id
-            await global_sockets[opp_id].send_json(response2)
+            await registry.get_socket(opp_id).send_json(response2)
             # check for game over by rules of board
             if game.is_finished():
                 result = game.get_result()
@@ -86,7 +86,7 @@ async def move_handler(params, user_id, ws):
                 response1 = await construct_game_over(result, win_pos, "win rule")
                 response2 = await construct_game_over(result, win_pos, "win rule")
                 await ws.send_json(response1)
-                await global_sockets[opp_id].send_json(response2)
+                await registry.get_socket(opp_id).send_json(response2)
                 # save game to db
                 await add_game_to_db(game)
                 game.clear()
@@ -102,7 +102,7 @@ async def offer_handler(params, user_id, ws):
         game.set_draw_offer(player.opp)
         responce = await construct_offered()
         opp_id = player.opp.player_id
-        await global_sockets[opp_id].send_json(responce)
+        await registry.get_socket(opp_id).send_json(responce)
     else:
         await ws.send_json(await construct_error('Draw offer rejected, no current game'))
 
@@ -119,7 +119,7 @@ async def accept_hadler(params, user_id, ws):
             response2 = await construct_game_over('draw', None, "agreement")
             await ws.send_json(response1)
             opp_id = player.opp.player_id
-            await global_sockets[opp_id].send_json(response2)
+            await registry.get_socket(opp_id).send_json(response2)
             # save game to db
             await add_game_to_db(game)
             game.clear()
@@ -170,13 +170,13 @@ async def handle_error(user_id):
             response = await construct_game_over(result=result,
                                                  win_pos=None,
                                                  cause="interruption")
-            await global_sockets[opp_id].send_json(response)
+            await registry.get_socket(opp_id).send_json(response)
             game.set_result(result)
             await add_game_to_db(game)
             game.clear()
             global_playground.unregister(user_id)
     finally:
-        global_sockets.pop(user_id)
+        registry.remove_socket(user_id)
 
 
 async def handle_command_new(cmd_data: Dict, user_id, ws):

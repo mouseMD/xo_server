@@ -4,7 +4,7 @@ from players import AlreadyRegistered
 from protocol import handle_command, handle_error, construct_error
 import json
 import logging
-from global_defs import global_playground, global_sockets
+from global_defs import global_playground, registry
 
 
 async def websocket_handler(request):
@@ -24,7 +24,7 @@ async def websocket_handler(request):
             await ws.send_json(await construct_error('User id {} already in use'.format(user_id)))
             await ws.close()
         else:
-            global_sockets[user_id] = ws
+            registry.add_socket(user_id, ws)
             async for msg in ws:
                 if msg.type == WSMsgType.TEXT:
                     await handle_command(json.loads(msg.data), user_id, ws)
