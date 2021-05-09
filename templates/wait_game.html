@@ -6,12 +6,16 @@
     <title>My Webpage</title>
 </head>
 <body>
-    <script src="static/sockets.js"></script>
     <div id="header">
         {% include 'header.html' %}
         <H1>User {{user}} is connected and waiting game.</H1>
     </div>
-    {% include 'board.html' %}
+    <div id = content>
+        <H2> Active users: </H2>
+        <div id = active-users-list>
+        </div>
+        <script src="static/activeUsersList.js"></script>
+    </div>
     <div id="footer">
         {% include 'footer.html' %}
     </div>
