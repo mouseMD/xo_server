@@ -1,0 +1,17 @@
+    <div id="content">
+        <div id="first_player">
+            FIRST PLAYER
+        </div>
+        <div id="second_player">
+            SECOND PLAYER
+        </div>
+        <canvas height="200" width="640" id='example'>Обновите браузер</canvas>
+        <div id="decision_controls">
+            <input type="button" value="ready" onclick="send_ready()">
+            <input type="button" value="move" onclick="send_move()">
+            <input type="button" value="resign" onclick="send_resign()">
+            <input type="button" value="offer" onclick="send_offer()">
+        </div>
+        <textarea id="debug" rows="10" cols="80" name="text"></textarea>
+	</div>
+    <script src="static/board.js"></script>
