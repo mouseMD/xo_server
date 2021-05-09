@@ -85,6 +85,9 @@ class Command(ABC):
     def data(self):
         pass
 
+    def __str__(self):
+        return str(self.__dict__)
+
 
 class InCommand(Command):
     """

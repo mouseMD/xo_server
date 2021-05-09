@@ -3,7 +3,7 @@ from typing import Optional, Iterable
 
 
 class Entry:
-    def __init__(self, player: 'Player', params: dict) -> None:
+    def __init__(self, player: 'Player') -> None:
         self.player = player
         self.game_type = None
         self.side = None
