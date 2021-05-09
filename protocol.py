@@ -182,17 +182,51 @@ async def handle_error(user_id):
 async def handle_command_new(cmd_data: Dict, user_id, ws):
     """
     """
-    result_commands = await execute_logic(CommandFactory.from_data(user_id, cmd_data))
-    for command in result_commands:
-        await send_command(command)
+    try:
+        result_commands = await execute_logic(CommandFactory.from_data(user_id, cmd_data))
+    except CommandException as exp:
+        logging.info(exp.args)
+    else:
+        for command in result_commands:
+            await send_command(command)
 
 
 async def execute_logic(cmd: Command) -> List[Optional[Command]]:
     """
-
-    :param cmd:
-    :return:
+    Business logic of game commands.
     """
+    command_handlers = {
+        ReadyCommand: execute_ready_handler,
+        ResignCommand: execute_resign_handler,
+        MoveCommand: execute_move_handler,
+        OfferCommand: execute_offer_handler,
+        AcceptCommand: execute_accept_handler
+    }
+    command_type = type(cmd)
+    if command_type in command_handlers:
+        result = await command_handlers[command_type](cmd)
+    else:
+        result = []
+    return result
+
+
+async def execute_ready_handler(cmd: ReadyCommand) -> List[Optional[Command]]:
+    return []
+
+
+async def execute_resign_handler(cmd: ResignCommand) -> List[Optional[Command]]:
+    return []
+
+
+async def execute_move_handler(cmd: MoveCommand) -> List[Optional[Command]]:
+    return []
+
+
+async def execute_offer_handler(cmd: OfferCommand) -> List[Optional[Command]]:
+    return []
+
+
+async def execute_accept_handler(cmd: AcceptCommand) -> List[Optional[Command]]:
     return []
 
 
