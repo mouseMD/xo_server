@@ -167,10 +167,8 @@ async def handle_error(user_id):
             opp_id = player.opp.player_id
             game = player.game
             result = "first_win" if player.side == "second" else "second_win"
-            response = await construct_game_over(result=result,
-                                                 win_pos=None,
-                                                 cause="interruption")
-            await registry.get_socket(opp_id).send_json(response)
+            await send_command(GameOverCommand(opp_id, result=result, win_pos=None, cause="interruption"))
+
             game.set_result(result)
             await add_game_to_db(game)
             game.clear()
