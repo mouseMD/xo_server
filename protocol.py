@@ -296,11 +296,40 @@ async def execute_move_handler(cmd: MoveCommand) -> List[Optional[Command]]:
 
 
 async def execute_offer_handler(cmd: OfferCommand) -> List[Optional[Command]]:
-    return []
+    logging.info(f"Handling 'offer' command: {str(cmd)}")
+    res_commands = []
+    player = global_playground.player(cmd.user_id)
+    if player.is_playing():
+        game = player.game
+        game.set_draw_offer(player.opp)
+        opp_id = player.opp.player_id
+        res_commands.append(OfferedCommand(opp_id))
+    else:
+        res_commands.append(ErrorCommand(cmd.user_id, msg='Draw offer rejected, no current game'))
+    return res_commands
 
 
 async def execute_accept_handler(cmd: AcceptCommand) -> List[Optional[Command]]:
-    return []
+    logging.info(f"Handling 'accept' command, user_id : {str(cmd)}")
+    res_commands = []
+    player = global_playground.player(cmd.user_id)
+    if player.is_playing():
+        game = player.game
+        if game.can_accept is player:
+            # fix the draw
+            game.set_result('draw')
+            opp_id = player.opp.player_id
+            res_commands.append(GameOverCommand(cmd.user_id, result='draw', win_pos=None, cause='agreement'))
+            res_commands.append(GameOverCommand(opp_id, result='draw', win_pos=None, cause='agreement'))
+
+            # save game to db
+            await add_game_to_db(game)
+            game.clear()
+        else:
+            res_commands.append(ErrorCommand(cmd.user_id, msg='Cannot accept, no offer'))
+    else:
+        res_commands.append(ErrorCommand(cmd.user_id, msg='Draw accept rejected, no current game'))
+    return res_commands
 
 
 async def send_command(cmd: Command) -> None:
