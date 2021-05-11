@@ -1,7 +1,8 @@
 from aiohttp import web, WSMsgType
 from aiohttp_security import authorized_userid
 from players import AlreadyRegistered
-from protocol import handle_command, handle_error, construct_error
+from protocol import handle_command_new, handle_error, send_command
+from commands import ErrorCommand
 import json
 import logging
 from global_defs import global_playground, registry
@@ -21,13 +22,13 @@ async def websocket_handler(request):
             global_playground.register(user_id)
         except AlreadyRegistered:
             logging.info("Deliberately closed connection with already connected user_id {}!".format(user_id))
-            await ws.send_json(await construct_error('User id {} already in use'.format(user_id)))
+            await send_command(ErrorCommand(user_id, msg=f'User id {user_id} already in use'))
             await ws.close()
         else:
             registry.add_socket(user_id, ws)
             async for msg in ws:
                 if msg.type == WSMsgType.TEXT:
-                    await handle_command(json.loads(msg.data), user_id, ws)
+                    await handle_command_new(json.loads(msg.data), user_id)
                 elif msg.type == WSMsgType.ERROR:
                     logging.info('connection closed with exception {} with user_id {}'.format(ws.exception(), user_id))
                     await handle_error(user_id)

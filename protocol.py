@@ -177,7 +177,7 @@ async def handle_error(user_id):
         registry.remove_socket(user_id)
 
 
-async def handle_command_new(cmd_data: Dict, user_id, ws):
+async def handle_command_new(cmd_data: Dict, user_id):
     """
     """
     try:
