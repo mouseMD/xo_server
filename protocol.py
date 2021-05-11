@@ -243,11 +243,56 @@ async def execute_ready_handler(cmd: ReadyCommand) -> List[Optional[Command]]:
 
 
 async def execute_resign_handler(cmd: ResignCommand) -> List[Optional[Command]]:
-    return []
+    logging.info(f"Handling 'resign' command: {str(cmd)}")
+    res_commands = []
+    player = global_playground.player(cmd.user_id)
+    if player.is_playing():
+        game = player.game
+        result = "first_win" if player.side == "second" else "second_win"
+        game.set_result(result)
+        await add_game_to_db(game)
+        opp_id = player.opp.player_id
+        game.clear()
+        res_commands.append(GameOverCommand(cmd.user_id, result=result, win_pos=None, cause="resignation"))
+        res_commands.append(GameOverCommand(opp_id, result=result, win_pos=None, cause="resignation"))
+    else:
+        res_commands.append(ErrorCommand(cmd.user_id, msg='Resign rejected, no current game'))
+    return res_commands
 
 
 async def execute_move_handler(cmd: MoveCommand) -> List[Optional[Command]]:
-    return []
+    logging.info(f"Handling 'move' command, user_id : {str(cmd)}")
+    res_commands = []
+    player = global_playground.player(cmd.user_id)
+    if player.is_playing():
+        game = player.game
+        try:
+            game.set_new_move(Move.create_move(player.side, cmd.square, cmd.vertical, cmd.horizontal))
+        except WrongPlayerException:
+            res_commands.append(ErrorCommand(cmd.user_id, msg='Move rejected, not your move'))
+        else:
+            game.update_result()
+            board = game.get_board()
+            player_to_move = game.player_to_move()
+            last_move = None
+            opp_id = player.opp.player_id
+            res_commands.append(UpdateStateCommand(cmd.user_id, board=board, player_to_move=player_to_move,
+                                                   last_move=last_move))
+            res_commands.append(UpdateStateCommand(opp_id, board=board, player_to_move=player_to_move,
+                                                   last_move=last_move))
+            # check for game over by rules of board
+            if game.is_finished():
+                result = game.get_result()
+                win_pos = game.get_win_pos()
+                res_commands.append(GameOverCommand(cmd.user_id, result=result, win_pos=win_pos, cause="win rule"))
+                res_commands.append(GameOverCommand(opp_id, result=result, win_pos=win_pos, cause="win rule"))
+
+                # save game to db
+                await add_game_to_db(game)
+                game.clear()
+    else:
+        res_commands.append(ErrorCommand(cmd.user_id, msg='New move rejected, no current game'))
+    return res_commands
 
 
 async def execute_offer_handler(cmd: OfferCommand) -> List[Optional[Command]]:
