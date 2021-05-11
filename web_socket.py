@@ -1,7 +1,7 @@
 from aiohttp import web, WSMsgType
 from aiohttp_security import authorized_userid
 from players import AlreadyRegistered
-from protocol import handle_command_new, handle_error, send_command
+from protocol import handle_command, handle_error, send_command
 from commands import ErrorCommand
 import json
 import logging
@@ -28,7 +28,7 @@ async def websocket_handler(request):
             registry.add_socket(user_id, ws)
             async for msg in ws:
                 if msg.type == WSMsgType.TEXT:
-                    await handle_command_new(json.loads(msg.data), user_id)
+                    await handle_command(json.loads(msg.data), user_id)
                 elif msg.type == WSMsgType.ERROR:
                     logging.info('connection closed with exception {} with user_id {}'.format(ws.exception(), user_id))
                     await handle_error(user_id)
