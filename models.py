@@ -2,6 +2,7 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy import Integer, String, Boolean, Column, ForeignKey, JSON, select
 from utils import current_timestamp
 from passlib.hash import sha256_crypt
+import asyncio
 
 Base = declarative_base()
 
@@ -46,6 +47,13 @@ class User(Base):
             for user in users:
                 user.online = False
                 session.add(user)
+
+
+async def background(session):
+    while True:
+        await User.find_offline_users(session)
+        await asyncio.sleep(30)
+
 
 
 class EntryException(Exception):

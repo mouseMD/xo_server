@@ -11,6 +11,7 @@ from auth import MyAuthorizationPolicy
 import logging
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+from models import background
 
 
 async def create_connection(app):
@@ -21,6 +22,7 @@ async def create_connection(app):
         engine, expire_on_commit=False, class_=AsyncSession
     )
     app['session'] = async_session()
+    asyncio.create_task(background(app['session']))
 
 
 async def delete_connection(app):

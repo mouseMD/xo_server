@@ -107,7 +107,8 @@ async def get_active_users(request):
     Get list of active users
     """
     session = request.app['session']
-    stmt = select(User).where(User.online == True)
+    # stmt = select(User).where(User.online == True)
+    stmt = select(User)
     async with session.begin():
         result = await session.execute(stmt)
     users = result.scalars().all()
