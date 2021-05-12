@@ -1,5 +1,5 @@
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import Integer, String, Boolean, Column, ForeignKey, JSON
+from sqlalchemy import Integer, String, Boolean, Column, ForeignKey, JSON, select
 from utils import current_timestamp
 from passlib.hash import sha256_crypt
 
@@ -32,6 +32,20 @@ class User(Base):
 
     def check_password(self, password: str):
         return sha256_crypt.verify(password, self.password_hash)
+
+    def ping(self):
+        self.last_seen_at = current_timestamp()
+        self.online = True
+
+    @staticmethod
+    def find_offline_users(session):
+        stmt = select(User).where(User.last_seen_at < current_timestamp() - 60, User.online == True)
+        async with session.begin():
+            result = await session.execute(stmt)
+            users = result.scalars().all()
+            for user in users:
+                user.online = False
+                session.add(user)
 
 
 class EntryException(Exception):
