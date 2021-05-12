@@ -18,7 +18,7 @@ async function fetch_users() {
     }
     for (var i = 0; i < result.length; i++) {
         listItem = document.createElement('li');
-        listItem.innerHTML = result[i].login + "   |   " + result[i].created_at;
+        listItem.innerHTML = result[i].login + "   |   " + result[i].online + "   |   " + result[i].last_seen_at;
         listElement.appendChild(listItem);
     }
 }

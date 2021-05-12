@@ -38,7 +38,7 @@ class User(Base):
         self.online = True
 
     @staticmethod
-    def find_offline_users(session):
+    async def find_offline_users(session):
         stmt = select(User).where(User.last_seen_at < current_timestamp() - 60, User.online == True)
         async with session.begin():
             result = await session.execute(stmt)

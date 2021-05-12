@@ -78,9 +78,12 @@ async def login_user(request):
     # here we have an old identity, we will change it to new if login successful
     session = request.app['session']
     stmt = select(User).where(User.login == login)
+    users = []
     async with session.begin():
         result = await session.execute(stmt)
-    users = result.scalars().all()
+        users = result.scalars().all()
+        if users and users[0].check_password(password):
+            users[0].ping()
     if users and users[0].check_password(password):
         # create new identity
         identity = 'auth_' + login
@@ -108,6 +111,7 @@ async def get_active_users(request):
     async with session.begin():
         result = await session.execute(stmt)
     users = result.scalars().all()
-    data = [{"login": user.login, "created_at": datetime.fromtimestamp(user.created_at).strftime('%Y-%m-%d %H:%M:%S')}
+    data = [{"login": user.login, "online": user.online,
+             "last_seen_at": datetime.fromtimestamp(user.last_seen_at).strftime('%Y-%m-%d %H:%M:%S')}
             for user in users]
     return web.json_response(data)
