@@ -121,3 +121,20 @@ canvas {
     text-align: center;
     width: 100%;
 }
+
+#active-users, #new-game, #board {display: inline-block; *display: inline; vertical-align: top; font-size: 12px;}
+#new-game {width: 20%; background: yellow;}
+#board {width: 59%; background: green;}
+#active-users {width: 20%; background: yellow;}
+
+
+#new-game-form .btn {
+  background-color: #04aa6d;
+  color: white;
+  padding: 16px 20px;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom:10px;
+  opacity: 0.8;
+}
