@@ -16,6 +16,7 @@ function new_challenge(evt) {
 function new_random(evt) {
     evt.preventDefault()
     console.log("Try new_random")
+    send_ready()
 }
 
 function new_bot(evt) {

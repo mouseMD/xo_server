@@ -241,6 +241,6 @@ class CommandFactory(ABC):
             parameters = data["parameters"]
         else:
             raise CommandException(f"Wrong protocol version {data['version']}!")
-        if command_type not in _commands:
+        if command_type not in CommandFactory._commands:
             raise CommandException(f"Unknown command {command_type} found!")
-        return _commands[command_type](user_id, parameters)
+        return CommandFactory._commands[command_type](user_id, **parameters)

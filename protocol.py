@@ -190,4 +190,4 @@ async def send_command(cmd: Command) -> None:
     """
     """
     ws = registry.get_socket(cmd.user_id)
-    ws.send_json(cmd.data())
+    await ws.send_json(cmd.data())
