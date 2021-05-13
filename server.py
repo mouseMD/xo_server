@@ -40,7 +40,7 @@ if __name__ == "__main__":
                          loader=jinja2.FileSystemLoader(str(BASE_DIR / 'templates')))
     setup_routes(app)
     setup_static_routes(app)
-    setup_security(app, SessionIdentityPolicy(), MyAuthorizationPolicy())
+    setup_security(app, SessionIdentityPolicy(), MyAuthorizationPolicy(app))
     app.on_startup.append(create_connection)
     app.on_cleanup.append(delete_connection)
     web.run_app(app)

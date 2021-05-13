@@ -106,6 +106,7 @@ async def get_active_users(request):
     """
     Get list of active users
     """
+    user_id = await authorized_userid(request)
     session = request.app['session']
     # stmt = select(User).where(User.online == True)
     stmt = select(User)
