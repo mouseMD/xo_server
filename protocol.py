@@ -1,10 +1,10 @@
 from db import add_game_to_db
 import logging
 from global_defs import global_playground, registry
-from players import Move, NotRegistered, NotIdleException, WrongPlayerException
+from players import NotRegistered, NotIdleException, WrongPlayerException
 from commands import *
 from typing import Dict, List, Optional
-from logic import add_new_entry, try_create_new_game, resign_game, clear_game
+from logic import add_new_entry, try_create_new_game, resign_game, clear_game, new_move
 
 
 async def handle_error(user_id):
@@ -106,37 +106,24 @@ async def execute_resign_handler(cmd: ResignCommand) -> List[Optional[Command]]:
 
 
 async def execute_move_handler(cmd: MoveCommand) -> List[Optional[Command]]:
-    logging.info(f"Handling 'move' command, user_id : {str(cmd)}")
+    logging.info(f"Handling 'move' command: {str(cmd)}")
     res_commands = []
-    player = global_playground.player(cmd.user_id)
-    if player.is_playing():
-        game = player.game
-        try:
-            game.set_new_move(Move.create_move(player.side, cmd.square, cmd.vertical, cmd.horizontal))
-        except WrongPlayerException:
-            res_commands.append(ErrorCommand(cmd.user_id, msg='Move rejected, not your move'))
-        else:
-            game.update_result()
-            board = game.get_board()
-            player_to_move = game.player_to_move()
-            last_move = None
-            opp_id = player.opp.player_id
-            res_commands.append(UpdateStateCommand(cmd.user_id, board=board, player_to_move=player_to_move,
-                                                   last_move=last_move))
-            res_commands.append(UpdateStateCommand(opp_id, board=board, player_to_move=player_to_move,
-                                                   last_move=last_move))
-            # check for game over by rules of board
+    user_id = cmd.user_id
+    try:
+        game = await new_move(user_id, cmd.data())
+        if game is not None:
+            first_id = game.first().player_id
+            second_id = game.second().player_id
+            res_commands.append(UpdateStateCommand.from_game(first_id, game))
+            res_commands.append(UpdateStateCommand.from_game(second_id, game))
             if game.is_finished():
-                result = game.get_result()
-                win_pos = game.get_win_pos()
-                res_commands.append(GameOverCommand(cmd.user_id, result=result, win_pos=win_pos, cause="win rule"))
-                res_commands.append(GameOverCommand(opp_id, result=result, win_pos=win_pos, cause="win rule"))
-
-                # save game to db
-                await add_game_to_db(game)
-                game.clear()
-    else:
-        res_commands.append(ErrorCommand(cmd.user_id, msg='New move rejected, no current game'))
+                res_commands.append(GameOverCommand.from_game(first_id, game, "win_rule"))
+                res_commands.append(GameOverCommand.from_game(second_id, game, "win_rule"))
+                await clear_game(game)
+        else:
+            res_commands.append(ErrorCommand(user_id, msg='New move rejected, no current game'))
+    except WrongPlayerException:
+        res_commands.append(ErrorCommand(user_id, msg='Move rejected, not your move'))
     return res_commands
 
 

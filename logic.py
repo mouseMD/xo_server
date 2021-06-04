@@ -1,6 +1,7 @@
 from global_defs import global_playground
-from players import Entry, Game
+from players import Entry, Game, Move
 from db import add_game_to_db
+from typing import Optional, Dict
 
 
 async def add_new_entry(uid, data):
@@ -33,3 +34,17 @@ async def resign_game(uid):
 
 async def clear_game(game: Game):
     game.clear()
+
+
+async def new_move(uid: str, data: Dict) -> Optional[Game]:
+    game = None
+    player = global_playground.player(uid)
+    if player.is_playing():
+        game = player.game
+        game.set_new_move(Move.create_move(player.side, data['parameters']['square'],
+                                           data['parameters']['vertical'], data['parameters']['horizontal']))
+        game.update_result()
+        if game.is_finished():
+            # save game to db
+            await add_game_to_db(game)
+    return game
