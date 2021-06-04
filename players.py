@@ -494,3 +494,7 @@ class Playground:
         if user_id not in self.users:
             raise NotRegistered()
         return self.users[user_id]
+
+    def get_entry(self, user_id: str) -> Entry:
+        player = self.users[user_id]
+        return player.entry

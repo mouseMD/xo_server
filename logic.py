@@ -10,7 +10,7 @@ async def add_new_entry(uid, data):
 
 async def try_create_new_game(uid):
     game = None
-    entry = global_playground.get_entry()
+    entry = global_playground.get_entry(uid)
     # check for suitable opponent
     match = global_playground.find_match(entry)
     if match is not None:
