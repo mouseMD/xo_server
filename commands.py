@@ -151,6 +151,11 @@ class GameOverCommand(OutCommand):
             'parameters': params
         }
 
+    @staticmethod
+    def from_game(user_id, game: Game, cause: str) -> 'GameOverCommand':
+        cmd = GameOverCommand(user_id, result=game.get_result(), win_pos=game.get_win_pos(), cause=cause)
+        return cmd
+
 
 class ReadyCommand(InCommand):
     def __init__(self, user_id, **parameters):
