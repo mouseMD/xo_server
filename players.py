@@ -151,6 +151,7 @@ class Game:
         self.game_type = None
         self.result = 'none'
         self.can_accept = None
+        self.last_move = None
 
     def setup(self, match: Match) -> None:
         """
@@ -197,6 +198,7 @@ class Game:
         self.status = "idle"
         self.game_type = None
         self.can_accept = None
+        self.last_move = None
 
     def first(self) -> Player:
         """
@@ -244,6 +246,7 @@ class Game:
         if move.player_to_move == self.player_to_move():
             xo_app_stub.set_new_move(self.game_id, move.player_to_move, [move.square, move.vertical, move.horizontal])
             self.can_accept = None
+            self.last_move = move
         else:
             raise WrongPlayerException()
 
@@ -317,6 +320,15 @@ class Game:
 
     def set_draw_offer(self, player) -> None:
         self.can_accept = player
+
+    def get_last_move(self) -> Move:
+        """
+
+        :return:
+        """
+        if self.status != 'running':
+            raise GameNotRunningException()
+        return self.last_move
 
 
 class PlaygroundException(Exception):
