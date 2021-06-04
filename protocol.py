@@ -4,6 +4,7 @@ from global_defs import global_playground, registry
 from players import Entry, Move, NotRegistered, NotIdleException, WrongPlayerException
 from commands import *
 from typing import Dict, List, Optional
+from logic import add_new_entry, try_create_new_game
 
 
 async def handle_error(user_id):
@@ -67,32 +68,24 @@ async def execute_logic(cmd: Command) -> List[Optional[Command]]:
 async def execute_ready_handler(cmd: ReadyCommand) -> List[Optional[Command]]:
     logging.info(f"Handling 'ready' command: {str(cmd)}")
     res_commands = []
+    user_id = cmd.user_id
     try:
-        player = global_playground.player(cmd.user_id)
-        entry = Entry(player)
-        global_playground.add_entry(entry)
+        await add_new_entry(user_id, cmd.data())
     except NotIdleException:
-        res_commands.append(ErrorCommand(cmd.user_id, msg="New entry rejected, already waiting game or playing"))
+        res_commands.append(ErrorCommand(user_id, msg="New entry rejected, already waiting game or playing"))
     else:
-        res_commands.append(WaitingCommand(cmd.user_id))
-        # check for suitable opponent
-        match = global_playground.find_match(entry)
-        if match is not None:
-            # create new game
-            game = global_playground.add_game(match)
-            # send "started" responces to both players
-            opp_id = player.opp.player_id
-            res_commands.append(StartedCommand(cmd.user_id, opp_id=opp_id, ptype=player.side))
-            res_commands.append(StartedCommand(opp_id, opp_id=cmd.user_id, ptype=player.opp.side))
+        res_commands.append(WaitingCommand(user_id))
+        game = await try_create_new_game(user_id)
+        if game is not None:
+            # send "started" responses to both players
+            first_id = game.first().player_id
+            second_id = game.second().player_id
+            res_commands.append(StartedCommand(first_id, opp_id=second_id, ptype="first"))
+            res_commands.append(StartedCommand(second_id, opp_id=first_id, ptype="second"))
 
-            # send "update_state" responces to both players
-            board = game.get_board()
-            player_to_move = game.player_to_move()
-            last_move = None
-            res_commands.append(UpdateStateCommand(cmd.user_id, board=board, player_to_move=player_to_move,
-                                                   last_move=last_move))
-            res_commands.append(UpdateStateCommand(opp_id, board=board, player_to_move=player_to_move,
-                                                   last_move=last_move))
+            # send "update_state" responses to both players
+            res_commands.append(UpdateStateCommand.from_game(first_id, game))
+            res_commands.append(UpdateStateCommand.from_game(second_id, game))
     return res_commands
 
 
