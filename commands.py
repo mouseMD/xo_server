@@ -1,5 +1,6 @@
 from typing import Dict
 from abc import ABC, abstractmethod
+from players import Game
 
 
 class CommandException(Exception):
@@ -111,6 +112,12 @@ class UpdateStateCommand(OutCommand):
             'command': 'update_state',
             'parameters': params
         }
+
+    @staticmethod
+    def from_game(user_id, game: Game) -> 'UpdateStateCommand':
+        cmd = UpdateStateCommand(user_id, board=game.get_board(), player_to_move=game.player_to_move(),
+                                 last_move=game.get_last_move())
+        return cmd
 
 
 class OfferedCommand(OutCommand):
